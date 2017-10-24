@@ -9,4 +9,14 @@
 
 (deftest read-file
   (let [result (m/read-metainfo file)]
-    (is (= "https://torrents.linuxmint.com/announce.php" (:announce result)))))
+    (is (= "https://torrents.linuxmint.com/announce.php" (:announce result)))
+    (is (= "Transmission/2.84 (14307)" (:created-by result)))
+    (is (= 1499021259 (:creation-date result)))
+    (is (= "UTF-8" (:encoding result)))
+    (let [info (:info result)]
+      (is (not= nil info))
+      (is (= 1676083200 (:length info)))
+      (is (= "linuxmint-18.2-cinnamon-64bit.iso" (:name info)))
+      (is (= 1048576 (:piece-length info)))
+      (is (not= nil (:pieces info)))
+      (is (= 0 (:private info))))))
