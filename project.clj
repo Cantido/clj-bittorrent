@@ -3,4 +3,6 @@
   :url "https://github.com/Cantido/clj-bittorrent"
   :license {:name "GNU General Public License"
             :url "http://www.gnu.org/licenses/gpl.txt"}
-  :dependencies [[org.clojure/clojure "1.8.0"]])
+  :profiles {:dev {:resource-paths ["test-resources"]}}
+  :dependencies [[org.clojure/clojure "1.8.0"]
+                 [clj-bencode "3.1.0"]])
