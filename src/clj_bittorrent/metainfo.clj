@@ -1,37 +1,42 @@
 (ns clj-bittorrent.metainfo
+  "Extracts information from a metainfo (AKA .torrent) file."
   (:require [clj-bencode.core :as b]
-            [clojure.set :as s]
-            [clojure.java.io :as io])
-  (:import (org.apache.commons.io IOUtils)
-           (java.security MessageDigest)
-           (java.nio.charset StandardCharsets)))
+            [clojure.set :as s]))
 
-(def metainfo-kmap {"announce" :announce
-                    "announce-list" :announce-list
-                    "created by" :created-by
-                    "creation date" :creation-date
-                    "encoding" :encoding
-                    "info" :info})
+(def ^:private metainfo-kmap
+  {"announce" :announce
+   "announce-list" :announce-list
+   "created by" :created-by
+   "creation date" :creation-date
+   "encoding" :encoding
+   "info" :info})
 
-(def info-kmap {"files" :files
-                "length" :length
-                "name" :name
-                "piece length" :piece-length
-                "pieces" :pieces
-                "private" :private})
+(def ^:private info-kmap
+  {"files" :files
+   "length" :length
+   "name" :name
+   "piece length" :piece-length
+   "pieces" :pieces
+   "private" :private})
 
-(def file-kmap {"length" :length
-                "md5sum" :md5sum
-                "path" :path})
+(def ^:private file-kmap
+  {"length" :length
+   "md5sum" :md5sum
+   "path" :path})
 
-(defn rename-file-keys [m]
+(defn- rename-file-keys [m]
   (s/rename-keys m file-kmap))
 
-(defn expected-piece-count [m]
+(defn expected-piece-count
+  "Returns the number of :piece-length sized pieces that should
+   be in the torrent file with metainfo m."[m]
   (let [{:keys [length piece-length]} (:info m)]
     (int (Math/ceil (float (/ length piece-length))))))
 
 (defn read
+  "Decode a BitTorrent metainfo file, AKA a .torrent file.
+   Common keys are made into keywords, but uncommon or
+   non-standard keys will remain as strings."
   [x]
   (-> x
       (b/decode)
