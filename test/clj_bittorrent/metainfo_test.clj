@@ -7,13 +7,10 @@
 (def metainfo-file ^File
   (io/file (io/resource "linuxmint-18.2-cinnamon-64bit.iso.torrent")))
 
-(def iso-file ^File
-  (io/file (io/resource "linuxmint-18.2-cinnamon-64bit.iso")))
+(defn mapreduce [mfn rfn coll]
+  (reduce rfn (map mfn (seq coll))))
 
-(defn hex [n]
-  (format "%02x" n));
-
-(deftest read-file
+(deftest read-file-test
   (let [result (m/read-metainfo metainfo-file)]
     (is (= 1599 (m/expected-piece-count result)))
     (is (= "https://torrents.linuxmint.com/announce.php" (:announce result)))
@@ -26,7 +23,5 @@
       (is (= "linuxmint-18.2-cinnamon-64bit.iso" (:name info)))
       (is (= 1048576 (:piece-length info)))
       (is (= 0 (:private info)))
-      ;(is (= true (every? #(= 20 (count %)) (:pieces info))))
-      ;(is (= "ef" (hex (ffirst (:pieces info)))))
-      (is (= (* 20 1599) (count (partition 20 (:pieces info))))))))
-
+      (is (= 1599 (count (:pieces info))))
+      (is (= 31980 (mapreduce count + (:pieces info)))))))
