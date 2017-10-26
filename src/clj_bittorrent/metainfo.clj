@@ -31,7 +31,11 @@
   "Returns the number of :piece-length sized pieces that should
    be in the torrent file with metainfo m."[m]
   (let [{:keys [length piece-length]} (:info m)]
-    (int (Math/ceil (float (/ length piece-length))))))
+    (-> (/
+          (int length)
+          (int piece-length))
+        (Math/ceil)
+        (int))))
 
 (defn read
   "Decode a BitTorrent metainfo file, AKA a .torrent file.
