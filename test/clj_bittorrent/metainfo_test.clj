@@ -14,7 +14,7 @@
   (reduce rfn (map mfn (seq coll))))
 
 (deftest read-file-test
-  (let [result (m/read-metainfo metainfo-file)]
+  (let [result (m/read metainfo-file)]
     (is (= 1599 (m/expected-piece-count result)))
     (is (= "https://torrents.linuxmint.com/announce.php" (:announce result)))
     (is (= "Transmission/2.84 (14307)" (:created-by result)))
@@ -30,7 +30,7 @@
       (is (= 31980 (mapreduce count + (:pieces info)))))))
 
 (deftest read-multi-file-torrent-test
-  (let [result (m/read-metainfo metainfo-multi-file)]
+  (let [result (m/read metainfo-multi-file)]
     (is (= "http://bt1.archive.org:6969/announce" (:announce result)))
     (is (= [["http://bt1.archive.org:6969/announce"]
             ["http://bt2.archive.org:6969/announce"]]

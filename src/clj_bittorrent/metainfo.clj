@@ -31,7 +31,8 @@
   (let [{:keys [length piece-length]} (:info m)]
     (int (Math/ceil (float (/ length piece-length))))))
 
-(defn read-metainfo [x]
+(defn read
+  [x]
   (-> x
       (b/decode)
       (s/rename-keys metainfo-kmap)
