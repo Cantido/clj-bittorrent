@@ -1,9 +1,13 @@
 (ns clj-bittorrent.metainfo
   "Extracts information from a metainfo (AKA .torrent) file."
+  (:refer-clojure :exclude [read])
   (:require [clj-bencode.core :as b]
-            [clojure.set :as s]))
+            [clojure.set :as s]
+            [clj-bittorrent.binary :as bin]
+            [clj-bittorrent.hash :as hash]))
 
-(def ^:private metainfo-kmap
+
+(def metainfo-kmap
   {"announce" :announce
    "announce-list" :announce-list
    "created by" :created-by
@@ -11,7 +15,7 @@
    "encoding" :encoding
    "info" :info})
 
-(def ^:private info-kmap
+(def info-kmap
   {"files" :files
    "length" :length
    "name" :name
@@ -19,7 +23,7 @@
    "pieces" :pieces
    "private" :private})
 
-(def ^:private file-kmap
+(def file-kmap
   {"length" :length
    "md5sum" :md5sum
    "path" :path})
@@ -37,14 +41,20 @@
         (Math/ceil)
         (int))))
 
+(defn calc-info-hash [m]
+  (map bin/ubyte (hash/sha1 (b/encode (:info m)))))
+
 (defn read
   "Decode a BitTorrent metainfo file, AKA a .torrent file.
    Common keys are made into keywords, but uncommon or
    non-standard keys will remain as strings."
   [x]
-  (-> x
-      (b/decode)
-      (s/rename-keys metainfo-kmap)
-      (update-in [:info] #(s/rename-keys % info-kmap))
-      (update-in [:info :pieces] (partial partition 20))
-      (update-in [:info :files] (partial map rename-file-keys))))
+  {:post [(= 20 (count (:info-hash %)))]}
+  (let [original (b/decode x)]
+    (-> original
+        (s/rename-keys metainfo-kmap)
+        (update-in [:info] #(s/rename-keys % info-kmap))
+        (update-in [:info :pieces] (partial map bin/ubyte))
+        (update-in [:info :pieces] (partial partition 20))
+        (update-in [:info :files] (partial map rename-file-keys))
+        (assoc :info-hash (calc-info-hash original)))))

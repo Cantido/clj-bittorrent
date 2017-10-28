@@ -1,7 +1,8 @@
 (ns clj-bittorrent.metainfo-test
   (:require [clojure.test :refer :all]
             [clojure.java.io :as io]
-            [clj-bittorrent.metainfo :as m])
+            [clj-bittorrent.metainfo :as m]
+            [clj-bittorrent.binary :as b])
   (:import (java.io File)))
 
 (def metainfo-file ^File
@@ -27,7 +28,8 @@
       (is (= 1048576 (:piece-length info)))
       (is (= 0 (:private info)))
       (is (= 1599 (count (:pieces info))))
-      (is (= 31980 (mapreduce count + (:pieces info)))))))
+      (is (= 31980 (mapreduce count + (:pieces info))))
+      (is (= true (every? b/ubyte? (apply concat (:pieces info))))))))
 
 (deftest read-multi-file-torrent-test
   (let [result (m/read metainfo-multi-file)]
@@ -47,7 +49,6 @@
       (let [files (:files info)]
         (is (= 15 (count files)))
         (let [first-file (first files)]
-          (println (keys first-file))
           (is (= 4279 (:length first-file)))
           (is (= "aae98423363bcafc54b03289f222612b9e0004b0" (get first-file "sha1")))
           (is (= "54cf30db294b07c6a26293c0a8aa8aee" (get first-file "md5")))
