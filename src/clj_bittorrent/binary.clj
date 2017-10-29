@@ -1,5 +1,6 @@
 (ns clj-bittorrent.binary
-  "Byte-manipulation functions.")
+  "Byte-manipulation functions."
+  (:require [clojure.string :as string]))
 
 (defn ubyte? ^Boolean [x] (<= 0 (int x) 255))
 (defn sbyte? ^Boolean [x] (<= -128 (int x) 127))
@@ -46,4 +47,4 @@
           (= 3 (count (filter #{\.} %)))
           (<= 4 (count (remove #{\.} %)))
           (>= 12 (count (remove #{\.} %)))]}
-  (apply str (interpose "." (seq s))))
+  (string/join "." (seq s)))

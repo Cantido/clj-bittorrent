@@ -12,10 +12,10 @@
   (is (= -17 (bin/sbyte 239))))
 
 (deftest ipv4-address-test
-  (= "192.168.1.100" (bin/ipv4-address [192 168 1 100]))
-  (= "127.0.0.1" (bin/ipv4-address [127 0 0 1]))
-  (= "0.0.0.0" (bin/ipv4-address [0 0 0 0]))
-  (= "255.255.255.255" (bin/ipv4-address [255 255 255 255])))
+  (is (= "192.168.1.100" (bin/ipv4-address [192 168 1 100])))
+  (is (= "127.0.0.1" (bin/ipv4-address [127 0 0 1])))
+  (is (= "0.0.0.0" (bin/ipv4-address [0 0 0 0])))
+  (is (= "255.255.255.255" (bin/ipv4-address [255 255 255 255]))))
 
 (declare reflective-spec sbyte-spec x)
 

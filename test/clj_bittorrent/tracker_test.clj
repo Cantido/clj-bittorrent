@@ -19,7 +19,7 @@
        "g%89%AB%CD%EF"
        "%124Vx%9A"))
 
-(deftest decode-peers-binary-test
+(deftest decode-peer-binary-entry-test
   (let [result (#'tracker/decode-peer-binary-entry
                  [48 -78 7 -102 32 1])]
     (is (= "48.178.7.154" (:ip result)))

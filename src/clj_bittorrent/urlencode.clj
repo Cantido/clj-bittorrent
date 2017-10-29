@@ -7,14 +7,14 @@
 (defn- char-range-integers [a b]
   {:pre [(< (int (char a)) (int (char b)))]}
   (set (range (int (char a))
-              (+ 1 (int (char b))))))
+              (inc (int (char b))))))
 
 (def ^:private digits (char-range-integers \0 \9))
 
 (def ^:private alpha
   (clojure.set/union
-    (set (range (int \A) (+ 1 (int \Z))))
-    (set (range (int \a) (+ 1 (int \z))))))
+    (set (range (int \A) (inc (int \Z))))
+    (set (range (int \a) (inc (int \z))))))
 
 (def ^:private punct
   (set (map int #{\. \- \_ \~})))
