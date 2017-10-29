@@ -7,36 +7,74 @@
   (:import (java.io File)
            (java.security MessageDigest)))
 
-(def metainfo-file ^File
-  (io/file (io/resource "linuxmint-18.2-cinnamon-64bit.iso.torrent")))
+(def info-hash
+  [0x12 0x34 0x56 0x78 0x9a
+   0xbc 0xde 0xf1 0x23 0x45
+   0x67 0x89 0xab 0xcd 0xef
+   0x12 0x34 0x56 0x78 0x9a])
 
-(def metainfo
-  (m/read metainfo-file))
+(def expected-urlencoded-info-hash
+  (str "%124Vx%9A"
+       "%BC%DE%F1%23E"
+       "g%89%AB%CD%EF"
+       "%124Vx%9A"))
 
-(def peer-id
-  (take 20 (repeatedly #(b/rand-ubyte))))
+(def example-request
+  {:info-hash info-hash
+   :peer-id info-hash
+   :port 6881
+   :uploaded 1000
+   :downloaded 1000
+   :left 1000
+   :compact 1
+   :event "started"
+   :ip "192.168.1.1"
+   :numwant 20})
 
-;; This test is designed to run against a real tracker server
-;
-(deftest get-initial-request-test
-  (let [result (tracker/announce "http://localhost:6969/announce"
-                            {:info-hash (:info-hash metainfo)
-                             :peer-id peer-id
-                             :port 6881
-                             :uploaded 1000
-                             :downloaded 1000
-                             :left 1000
-                             :compact 1
-                             :event "started"
-                             :ip "192.168.1.100"
-                             :numwant 20})]
+(def example-response
+  {:request-time 39,
+   :repeatable? false,
+   :protocol-version {:name "HTTP", :major 1, :minor 1},
+   :streaming? true,
+   :chunked? false,
+   :reason-phrase "OK",
+   :headers {"Content-Type" "text/plain", "Content-Length" 98},
+   :orig-content-encoding nil,
+   :status 200,
+   :length 98,
+   :body "d8:completei0e10:downloadedi0e10:incompletei1e8:intervali1850e12:min intervali925e5:peers6:� �e",
+   :trace-redirects []})
+
+
+(deftest tracker-request-test
+  (let [request (#'tracker/tracker-request
+                  "http://localhost:6969/announce"
+                  example-request)]
+    (is (= :get (:method request)))
+    (is (= (format
+             "http://localhost:6969/announce?info_hash=%s&peer_id=%s"
+             expected-urlencoded-info-hash
+             expected-urlencoded-info-hash)
+           (:url request)))
+    (let [params (:query-params request)]
+      (is (= nil (:peer-id params)))
+      (is (= nil (:info-hash params)))
+      (is (= 6881 (:port params)))
+      (is (= 1000 (:uploaded params)))
+      (is (= 1000 (:downloaded params)))
+      (is (= 1000 (:left params)))
+      (is (= 1 (:compact params)))
+      (is (= "started" (:event params)))
+      (is (= "192.168.1.1" (:ip params)))
+      (is (= 20 (:numwant params))))))
+
+(deftest tracker-response-test
+  (let [result (#'tracker/tracker-response example-response)]
     (is (not= true (nil? result)))
     (is (= 0 (get result "complete")))
     (is (= 0 (get result "downloaded")))
     (is (= 1 (get result "incomplete")))
     (is (pos? (get result "interval")))
     (is (pos? (get result "min interval")))
-    (is (= [-17 -65 -67 17 0 1] (map int (seq (get result "peers")))))))
-
-
-
+    (is (= [-17 -65 -67 17 32 1]
+           (map int (seq (get result "peers")))))))
