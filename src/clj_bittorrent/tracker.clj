@@ -5,6 +5,20 @@
             [clj-bittorrent.urlencode :as u]
             [clj-bittorrent.binary :as bin]))
 
+(defn- decode-peer-binary-entry [s]
+  (let [[ip port] (split-at 4 s)]
+    {:ip (bin/ipv4-address (seq (map bin/ubyte ip)))
+     :port (BigInteger. (byte-array (seq port)))}))
+
+(defn- decode-peers-binary
+  [s]
+  {:post [(every? map? %)
+          (every? some? (map :ip %))
+          (every? some? (map :port %))]}
+  (->> s
+       (seq)
+       (partition 6)
+       (map decode-peer-binary-entry)))
 
 (defn- tracker-response
   [m]
@@ -12,7 +26,8 @@
     (:body)
     (str)
     (.getBytes)
-    (b/decode)))
+    (b/decode)
+    (update-in ["peers"] decode-peers-binary)))
 
 (defn- tracker-request
   "Create an HTTP request map from the info in map m."

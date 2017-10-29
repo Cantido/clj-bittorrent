@@ -19,6 +19,18 @@
        "g%89%AB%CD%EF"
        "%124Vx%9A"))
 
+(deftest decode-peers-binary-test
+  (let [result (#'tracker/decode-peer-binary-entry
+                 [48 -78 7 -102 32 1])]
+    (is (= "48.178.7.154" (:ip result)))
+    (is (= 8193 (:port result)))))
+
+(deftest decode-peers-binary-test
+  (let [result (#'tracker/decode-peers-binary
+                 [48 -78 7 -102 32 1])]
+    (is (= [{:ip "48.178.7.154" :port 8193}] result))
+    (is (= {:ip "48.178.7.154" :port 8193} (first result)))))
+
 (def example-request
   {:info-hash info-hash
    :peer-id info-hash
@@ -32,16 +44,16 @@
    :numwant 20})
 
 (def example-response
-  {:request-time 39,
-   :repeatable? false,
-   :protocol-version {:name "HTTP", :major 1, :minor 1},
-   :streaming? true,
-   :chunked? false,
-   :reason-phrase "OK",
-   :headers {"Content-Type" "text/plain", "Content-Length" 98},
-   :orig-content-encoding nil,
-   :status 200,
-   :length 98,
+  {:request-time 39
+   :repeatable? false
+   :protocol-version {:name "HTTP", :major 1, :minor 1}
+   :streaming? true
+   :chunked? false
+   :reason-phrase "OK"
+   :headers {"Content-Type" "text/plain", "Content-Length" 98}
+   :orig-content-encoding nil
+   :status 200
+   :length 98
    :body "d8:completei0e10:downloadedi0e10:incompletei1e8:intervali1850e12:min intervali925e5:peers6:� �e",
    :trace-redirects []})
 
@@ -76,5 +88,5 @@
     (is (= 1 (get result "incomplete")))
     (is (pos? (get result "interval")))
     (is (pos? (get result "min interval")))
-    (is (= [-17 -65 -67 17 32 1]
-           (map int (seq (get result "peers")))))))
+    (is (= (list {:ip "239.191.189.17" :port 8193})
+           (get result "peers")))))

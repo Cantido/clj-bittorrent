@@ -34,3 +34,16 @@
   {:pre [(ubyte? b)]
    :post [(= 2 (count (seq %)))]}
   (format "%02X" (int b)))
+
+(defn ipv4-address
+  "Decodes a list of unsigned bytes into an IPv4 address."
+  ^String [s]
+  {:pre [(= 4 (count (seq s)))
+         (every? ubyte? (seq s))]
+   :post [(some? %)
+          (<= 7 (count (seq %)))
+          (>= 15 (count (seq %)))
+          (= 3 (count (filter #{\.} %)))
+          (<= 4 (count (remove #{\.} %)))
+          (>= 12 (count (remove #{\.} %)))]}
+  (apply str (interpose "." (seq s))))
