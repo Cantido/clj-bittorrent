@@ -7,7 +7,7 @@
             [clj-bittorrent.hash :as hash]))
 
 
-(def metainfo-kmap
+(def ^:private metainfo-kmap
   {"announce" :announce
    "announce-list" :announce-list
    "created by" :created-by
@@ -15,7 +15,7 @@
    "encoding" :encoding
    "info" :info})
 
-(def info-kmap
+(def ^:private info-kmap
   {"files" :files
    "length" :length
    "name" :name
@@ -23,7 +23,7 @@
    "pieces" :pieces
    "private" :private})
 
-(def file-kmap
+(def ^:private file-kmap
   {"length" :length
    "md5sum" :md5sum
    "path" :path})
@@ -33,7 +33,8 @@
 
 (defn expected-piece-count
   "Returns the number of :piece-length sized pieces that should
-   be in the torrent file with metainfo m."[m]
+   be in the torrent file with metainfo m."
+  [m]
   (let [{:keys [length piece-length]} (:info m)]
     (-> (/
           (int length)
@@ -41,7 +42,7 @@
         (Math/ceil)
         (int))))
 
-(defn calc-info-hash [m]
+(defn- calc-info-hash [m]
   (map bin/ubyte (hash/sha1 (b/encode (:info m)))))
 
 (defn read

@@ -11,7 +11,6 @@
 (deftest sbyte-test
   (= -17 (bin/sbyte 239)))
 
-
 (declare reflective-spec sbyte-spec x)
 
 (defspec reflective-spec

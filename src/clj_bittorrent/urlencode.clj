@@ -9,13 +9,14 @@
   (set (range (int (char a))
               (+ 1 (int (char b))))))
 
-(def digits (char-range-integers \0 \9))
+(def ^:private digits (char-range-integers \0 \9))
 
-(def alpha (clojure.set/union
-             (set (range (int \A) (+ 1 (int \Z))))
-             (set (range (int \a) (+ 1 (int \z))))))
+(def ^:private alpha
+  (clojure.set/union
+    (set (range (int \A) (+ 1 (int \Z))))
+    (set (range (int \a) (+ 1 (int \z))))))
 
-(def punct
+(def ^:private punct
   (set (map int #{\. \- \_ \~})))
 
 (defn- allowed-raw? [b]
@@ -23,7 +24,6 @@
     (digits (int b))
     (alpha (int b))
     (punct (int b))))
-
 
 (defn- urlencode-byte [b]
   {:pre [(b/ubyte? b)]
@@ -46,4 +46,3 @@
     (map int)
     (mapcat urlencode-byte)
     (apply str)))
-
