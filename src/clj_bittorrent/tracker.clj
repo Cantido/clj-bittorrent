@@ -46,8 +46,7 @@
                                  :compact
                                  :event
                                  :ip
-                                 :numwant])
-   :debug true})
+                                 :numwant])})
 
 (defn announce
   "Announce yourself to the tracker for torrent map m."
