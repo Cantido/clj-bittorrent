@@ -138,19 +138,70 @@
           [(:port msg-id)]
           (bin/int-byte-field 2 port)))
 
+(defn- split-message
+  ([xs i j]
+   (let [[a ys] (split-at i xs)
+         [b c] (split-at j ys)]
+     [a b c]))
+  ([xs i j k]
+   (let [[a ys] (split-at i xs)
+         [b zs] (split-at j ys)
+         [c d] (split-at k zs)]
+     [a b c d]))
+  ([xs i j k l]
+   (let [[a ys] (split-at i xs)
+         [b zs] (split-at j ys)
+         [c ws] (split-at k zs)
+         [d e] (split-at k ws)]
+     [a b c d e])))
+
+(defn- payload [xs]
+  (nth (split-message xs 4 1) 2))
+
+(defn- recv-have [xs]
+  {:id :have
+   :index (bin/int-from-bytes (payload xs))})
+
+(defn- recv-bitfield [xs]
+  {:id :bitfield
+   :indices (bin/bitfield-set (payload xs))})
+
+(defn- recv-request [xs]
+  (merge {:id :request}
+         (zipmap [:index :begin :length]
+                 (drop 2 (map bin/int-from-bytes
+                              (split-message xs 4 1 4 4))))))
+
+(defn- recv-cancel [xs]
+  (merge {:id :cancel}
+         (zipmap [:index :begin :length]
+                 (drop 2 (map bin/int-from-bytes
+                              (split-message xs 4 1 4 4))))))
+
+(defn- recv-piece [xs]
+  (let [[len id index begin block] (split-message xs 4 1 4 4)]
+    {:id :piece
+     :index (bin/int-from-bytes index)
+     :begin (bin/int-from-bytes begin)
+     :block block}))
+
+(defn- recv-port [xs]
+  {:id :port :port (bin/int-from-bytes (payload xs))})
+
+
 (defn- recv-type [xs]
-  (get msg (get xs 4)))
+  (get msg (get (vec xs) 4)))
 
 (defmulti recv recv-type)
 
-(defmethod recv :keep-alive     [x] x)
-(defmethod recv :choke          [x] x)
-(defmethod recv :unchoke        [x] x)
-(defmethod recv :interested     [x] x)
-(defmethod recv :not-interested [x] x)
-(defmethod recv :have           [x] x)
-(defmethod recv :bitfield       [x] x)
-(defmethod recv :request        [x] x)
-(defmethod recv :piece          [x] x)
-(defmethod recv :cancel         [x] x)
-(defmethod recv :port           [x] x)
+(defmethod recv :keep-alive     [x] {:id :keep-alive})
+(defmethod recv :choke          [x] {:id :choke})
+(defmethod recv :unchoke        [x] {:id :unchoke})
+(defmethod recv :interested     [x] {:id :interested})
+(defmethod recv :not-interested [x] {:id :not-interested})
+(defmethod recv :have           [x] (recv-have x))
+(defmethod recv :bitfield       [x] (recv-bitfield x))
+(defmethod recv :request        [x] (recv-request x))
+(defmethod recv :piece          [x] (recv-piece x))
+(defmethod recv :cancel         [x] (recv-cancel x))
+(defmethod recv :port           [x] (recv-port x))

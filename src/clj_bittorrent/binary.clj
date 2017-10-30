@@ -8,6 +8,30 @@
 (defn max-at-bytes [n]
   (max-at-bits (* n 8)))
 
+(defn bitfield-byte
+  "Returns the set of indices (left-right) of the byte that are
+   set to 1."
+  [x]
+  (set
+    (for [i (range 8)
+          :when (bit-test x i)]
+      (- 7 i))))
+
+(defn- reduce-bitfield-array
+  [init i v]
+  (apply conj
+         init
+         (map
+           (partial + (* 8 i))
+           (bitfield-byte v))))
+
+(defn bitfield-set
+  "Returns the set of indices of all 1-bits in the given byte array.
+   Zero indexed and capped at the total number of bits minus one"
+  [x]
+  {:post [(<= (count %) (* 8 (count x)))]}
+  (reduce-kv reduce-bitfield-array #{} (vec x)))
+
 (defn fits-in-bytes-signed [n x]
   (let [exp (/ (max-at-bytes n) 2)]
     (<= (- exp)
@@ -37,6 +61,9 @@
   {:pre [(ubyte? b)]
    :post [(sbyte? %)]}
   (unchecked-byte (+ 256 b)))
+
+(defn int-from-bytes [xs]
+  (BigInteger. (byte-array (seq xs))))
 
 (defn rand-ubyte
   ^Integer []
