@@ -3,7 +3,7 @@
             [clj-bittorrent.tracker :as tracker]
             [clojure.java.io :as io]
             [clj-bittorrent.metainfo :as m]
-            [clj-bittorrent.binary :as b])
+            [clj-bittorrent.binary :as bin])
   (:import (java.io File)
            (java.security MessageDigest)))
 
@@ -23,7 +23,11 @@
   (let [result (#'tracker/decode-peer-binary-entry
                  [48 -78 7 -102 32 1])]
     (is (= "48.178.7.154" (:ip result)))
-    (is (= 8193 (:port result)))))
+    (is (= 8193 (:port result))))
+  (let [result (#'tracker/decode-peer-binary-entry
+                 (map bin/sbyte [192 168 1 100 26 225]))]
+    (is (= "192.168.1.100" (:ip result)))
+    (is (= 6881 (:port result)))))
 
 (deftest decode-peers-binary-test
   (let [result (#'tracker/decode-peers-binary
@@ -43,19 +47,30 @@
    :ip "192.168.1.1"
    :numwant 20})
 
+(def example-response-body
+  (concat
+    "d"
+    "8:complete" "i0e"
+    "10:downloaded" "i0e"
+    "10:incomplete" "i1e"
+    "8:interval" "i1850e"
+    "12:min interval" "i925e"
+    "5:peers" "6:" (map bin/sbyte [192 168 1 100 26 225])
+    "e"))
+
 (def example-response
-  {:request-time 39
-   :repeatable? false
-   :protocol-version {:name "HTTP", :major 1, :minor 1}
-   :streaming? true
-   :chunked? false
-   :reason-phrase "OK"
-   :headers {"Content-Type" "text/plain", "Content-Length" 98}
+  {:request-time          39
+   :repeatable?           false
+   :protocol-version      {:name "HTTP", :major 1, :minor 1}
+   :streaming?            true
+   :chunked?              false
+   :reason-phrase         "OK"
+   :headers               {"Content-Type" "text/plain", "Content-Length" 98}
    :orig-content-encoding nil
-   :status 200
-   :length 98
-   :body "d8:completei0e10:downloadedi0e10:incompletei1e8:intervali1850e12:min intervali925e5:peers6:� �e",
-   :trace-redirects []})
+   :status                200
+   :length                98
+   :body                  (byte-array (map int example-response-body))
+   :trace-redirects       []})
 
 
 (deftest tracker-request-test
@@ -80,13 +95,18 @@
       (is (= "192.168.1.1" (:ip params)))
       (is (= 20 (:numwant params))))))
 
+;; Uncomment & use this test if you want to hit a
+;; real tracker server running locally.
+;(deftest integration-test
+;  (is (= {} (tracker/announce "http://localhost:6969/announce" example-request))))
+
 (deftest tracker-response-test
   (let [result (#'tracker/tracker-response example-response)]
     (is (not= true (nil? result)))
     (is (= 0 (get result "complete")))
     (is (= 0 (get result "downloaded")))
     (is (= 1 (get result "incomplete")))
-    (is (pos? (get result "interval")))
-    (is (pos? (get result "min interval")))
-    (is (= (list {:ip "239.191.189.17" :port 8193})
+    (is (= 1850 (get result "interval")))
+    (is (= 925 (get result "min interval")))
+    (is (= (list {:ip "192.168.1.100" :port 6881})
            (get result "peers")))))

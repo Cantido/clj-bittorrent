@@ -22,10 +22,10 @@
 
 (defn- tracker-response
   [m]
+  {:pre [(some? m)]}
   (-> m
     (:body)
-    (str)
-    (.getBytes)
+    (byte-array)
     (b/decode)
     (update-in ["peers"] decode-peers-binary)))
 
