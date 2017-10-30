@@ -32,3 +32,19 @@
       reserved
       info-hash
       peer-id)))
+
+(def connection-start-state
+  {:choking true
+   :interested false})
+
+(def start-state
+  {:client connection-start-state
+   :peer connection-start-state})
+
+(defn download? [m]
+  (and (get-in m [:client :interested])
+       (not (get-in m [:peer :choking]))))
+
+(defn upload? [m]
+  (and (not (get-in m [:client :choking]))
+       (get-in m [:peer :interested])))
