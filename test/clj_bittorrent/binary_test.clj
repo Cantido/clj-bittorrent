@@ -5,6 +5,19 @@
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]))
 
+(deftest sbyte?-test
+  (is (= true (bin/sbyte? -128)))
+  (is (= true (bin/sbyte? 127)))
+  (is (= false (bin/sbyte? 128)))
+  (is (= false (bin/sbyte? -129))))
+
+(deftest ubyte?-test
+  (is (= true (bin/ubyte? 0)))
+  (is (= true (bin/ubyte? 1)))
+  (is (= true (bin/ubyte? 255)))
+  (is (= false (bin/ubyte? 256)))
+  (is (= false (bin/ubyte? -1))))
+
 (deftest ubyte-test
   (is (= 239 (bin/ubyte -17))))
 

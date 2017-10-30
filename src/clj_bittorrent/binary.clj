@@ -2,8 +2,26 @@
   "Byte-manipulation functions."
   (:require [clojure.string :as string]))
 
-(defn ubyte? ^Boolean [x] (<= 0 (int x) 255))
-(defn sbyte? ^Boolean [x] (<= -128 (int x) 127))
+(defn max-at-bits [n]
+ (bigint (Math/pow 2 n)))
+
+(defn max-at-bytes [n]
+  (max-at-bits (* n 8)))
+
+(defn fits-in-bytes-signed [n x]
+  (let [exp (/ (max-at-bytes n) 2)]
+    (<= (- exp)
+        (bigint x)
+        (- exp 1))))
+
+(defn fits-in-bytes-unsigned [n x]
+  (<= 0
+      (bigint x)
+      (- (max-at-bytes n) 1)))
+
+(defn ubyte? ^Boolean [x] (fits-in-bytes-unsigned 1 x))
+(defn sbyte? ^Boolean [x] (fits-in-bytes-signed 1 x))
+(defn sint? ^Boolean [x] (fits-in-bytes-signed 4 x))
 
 (defn ubyte
   "converts a signed byte to an unsigned byte.

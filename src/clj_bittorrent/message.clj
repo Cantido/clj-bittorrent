@@ -1,5 +1,6 @@
 (ns clj-bittorrent.message
-  (:require [clj-bittorrent.binary :as bin]))
+  (:require [clj-bittorrent.binary :as bin]
+            [clojure.set :as sets]))
 
 (def msg-id
   {:keep-alive     nil
@@ -15,7 +16,7 @@
    :port           0x09})
 
 (def msg
-  (clojure.set/map-invert msg-id))
+  (sets/map-invert msg-id))
 
 (defn- have-message
   [piece-index]
@@ -27,13 +28,18 @@
 
 (defn- bitfield-message
   [bitfield]
-  {:post [(<= 5 (count %))]}
-  (concat (bin/pad-bytes 4 (inc (count bitfield)))
+  {:pre [(coll? bitfield)]
+   :post [(= (count %) (+ 5 (count bitfield)))]}
+  (concat (bin/int-byte-field 4 (inc (count bitfield)))
           [(:bitfield msg-id)]
           (byte-array bitfield)))
 
 (defn- request-message
   [index begin length]
+  {:pre [(bin/sint? index)
+         (bin/sint? begin)
+         (bin/sint? length)]
+   :post [(= 17 (count %))]}
   (concat
     [0x00 0x00 0x00 13]
     [(:request msg-id)]
@@ -43,6 +49,10 @@
 
 (defn- piece-message
   [index begin block]
+  {:pre [(bin/sint? index)
+         (bin/sint? begin)
+         (bin/sint? (+ 9 (count block)))]
+   :post [(= (+ 13 (count block) (count %)))]}
   (concat
     (bin/int-byte-field 4 (+ 9 (count block)))
     [(:piece msg-id)]
@@ -52,6 +62,10 @@
 
 (defn- cancel-message
   [index begin length]
+  {:pre [(bin/sint? index)
+         (bin/sint? begin)
+         (bin/sint? length)]
+   :post [(= 17 (count %))]}
   (concat
     [0x00 0x00 0x00 13]
     [(:cancel msg-id)]
@@ -59,24 +73,35 @@
     (bin/int-byte-field 4 begin)
     (bin/int-byte-field 4 length)))
 
-(defmulti message class)
+(defn- port-message
+  [port]
+  {:pre [(bin/fits-in-bytes-unsigned 2 port)]
+   :post [(= 7 (count %))]}
+  (concat [0x00 0x00 0x00 0x03]
+          [(:port msg-id)]
+          (bin/int-byte-field 2 port)))
 
-(defmethod message :keep-alive     [] [0x00 0x00 0x00 0x00])
-(defmethod message :choke          [] [0x00 0x00 0x00 0x01 (:choke msg-id)])
-(defmethod message :unchoke        [] [0x00 0x00 0x00 0x01 (:unchoke msg-id)])
-(defmethod message :interested     [] [0x00 0x00 0x00 0x01 (:interested msg-id)])
-(defmethod message :not-interested [] [0x00 0x00 0x00 0x01 (:not-interested msg-id)])
-(defmethod message :have           [piece-index] (have-message piece-index))
-(defmethod message :bitfield       [bits] (bitfield-message bits))
-(defmethod message :request        [index begin length] (request-message index begin length))
-(defmethod message :piece          [index begin block] (piece-message index begin block))
-(defmethod message :cancel         [index begin length] (cancel-message index begin length))
-(defmethod message :port           [port] (concat [0x00 0x00 0x00 0x03 (:port msg-id)] (intfield 2 port)))
+(defn- msg-type [x & more]
+  x)
 
-(defn- msg-type [xs]
+(defmulti message msg-type)
+
+(defmethod message :keep-alive     [x] [0x00 0x00 0x00 0x00])
+(defmethod message :choke          [x] [0x00 0x00 0x00 0x01 (:choke msg-id)])
+(defmethod message :unchoke        [x] [0x00 0x00 0x00 0x01 (:unchoke msg-id)])
+(defmethod message :interested     [x] [0x00 0x00 0x00 0x01 (:interested msg-id)])
+(defmethod message :not-interested [x] [0x00 0x00 0x00 0x01 (:not-interested msg-id)])
+(defmethod message :have           [x piece-index] (have-message piece-index))
+(defmethod message :bitfield       [x bits] (bitfield-message bits))
+(defmethod message :request        [x index begin length] (request-message index begin length))
+(defmethod message :piece          [x index begin block] (piece-message index begin block))
+(defmethod message :cancel         [x index begin length] (cancel-message index begin length))
+(defmethod message :port           [x port] (port-message port))
+
+(defn- recv-type [xs]
   (get msg (get xs 4)))
 
-(defmulti recv msg-type)
+(defmulti recv recv-type)
 
 (defmethod recv :keep-alive     [x] x)
 (defmethod recv :choke          [x] x)
