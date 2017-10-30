@@ -17,6 +17,23 @@
   (is (= "0.0.0.0" (bin/ipv4-address [0 0 0 0])))
   (is (= "255.255.255.255" (bin/ipv4-address [255 255 255 255]))))
 
+(deftest pad-bytes-test
+  (is (= '() (bin/pad-bytes 0 [])))
+  (is (= '(0) (bin/pad-bytes 0 [0x00])))
+  (is (= '(0) (bin/pad-bytes 1 [0x00])))
+  (is (= '(0 0) (bin/pad-bytes 2 [0x00])))
+  (is (= '(0 0xDD) (bin/pad-bytes 2 [0xDD])))
+  (is (= '(0xDD 0xFF) (bin/pad-bytes 1 [0xDD 0xFF]))))
+
+(deftest int-bytearray-test
+  (is (= '(0) (seq (bin/int-bytearray 0))))
+  (is (= '(127) (seq (bin/int-bytearray 127))))
+  (is (= '(35 41) (seq (bin/int-bytearray 9001)))))
+
+(deftest int-byte-field-test
+  (is (= '(0 0 0 1) (bin/int-byte-field 4 1)))
+  (is (= '(0 0 35 41) (bin/int-byte-field 4 9001))))
+
 (declare reflective-spec sbyte-spec x)
 
 (defspec reflective-spec

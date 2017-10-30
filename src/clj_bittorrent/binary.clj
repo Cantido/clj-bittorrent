@@ -48,3 +48,26 @@
           (<= 4 (count (remove #{\.} %)))
           (>= 12 (count (remove #{\.} %)))]}
   (string/join "." (seq s)))
+
+(defn pad-bytes
+  "Left-pads a byte array to the given size.
+   Returns the array if it's equal to or bigger than n.
+   This will not shrink the array."
+  [n x]
+  (if (< (count x) n)
+    (recur n (cons 0x00 x))
+    x))
+
+(defn int-bytearray
+  "Converts an integer into a byte array."
+  [x]
+  {:pre [(not (neg? x))]
+   :post [(<= 1 (count %))]}
+  (.toByteArray (BigInteger/valueOf (int x))))
+
+(defn int-byte-field
+  "Converts an integer x into a byte array of size n."
+  [n x]
+  {:pre [(< x (Math/pow 2 (* n 8)))]
+   :post [(<= n (count %))]}
+  (pad-bytes n (int-bytearray x)))
