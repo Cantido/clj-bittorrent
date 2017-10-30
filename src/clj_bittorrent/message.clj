@@ -72,3 +72,20 @@
 (defmethod message :piece          [index begin block] (piece-message index begin block))
 (defmethod message :cancel         [index begin length] (cancel-message index begin length))
 (defmethod message :port           [port] (concat [0x00 0x00 0x00 0x03 (:port msg-id)] (intfield 2 port)))
+
+(defn- msg-type [xs]
+  (get msg (get xs 4)))
+
+(defmulti recv msg-type)
+
+(defmethod recv :keep-alive     [x] x)
+(defmethod recv :choke          [x] x)
+(defmethod recv :unchoke        [x] x)
+(defmethod recv :interested     [x] x)
+(defmethod recv :not-interested [x] x)
+(defmethod recv :have           [x] x)
+(defmethod recv :bitfield       [x] x)
+(defmethod recv :request        [x] x)
+(defmethod recv :piece          [x] x)
+(defmethod recv :cancel         [x] x)
+(defmethod recv :port           [x] x)
