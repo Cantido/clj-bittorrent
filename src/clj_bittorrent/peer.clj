@@ -41,6 +41,12 @@
   {:client connection-start-state
    :peer connection-start-state})
 
+(defn choke [m]
+  (assoc m :choking true))
+
+(defn unchoke [m]
+  (assoc m :choking false))
+
 (defn download? [m]
   (and (get-in m [:client :interested])
        (not (get-in m [:peer :choking]))))

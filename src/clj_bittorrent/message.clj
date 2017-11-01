@@ -1,6 +1,7 @@
 (ns clj-bittorrent.message
   (:require [clj-bittorrent.binary :as bin]
-            [clojure.set :as sets]))
+            [clojure.set :as sets]
+            [clj-bittorrent.peer :as peer]))
 
 (def msg-id
   {:keep-alive     nil
@@ -98,7 +99,7 @@
 (defmethod message :cancel         [x index begin length] (cancel-message index begin length))
 (defmethod message :port           [x port] (port-message port))
 
-(defn- recv-type [xs]
+(defn- recv-type [xs & more]
   (get msg (get xs 4)))
 
 (defmulti recv recv-type)
@@ -114,3 +115,29 @@
 (defmethod recv :piece          [x] x)
 (defmethod recv :cancel         [x] x)
 (defmethod recv :port           [x] x)
+
+
+(defn apply-choke [msg state]
+  (update-in state [:client] peer/choke))
+
+(defn apply-unchoke [msg state]
+  (update-in state [:client] peer/unchoke))
+
+(defn apply-type [x & more]
+  x)
+
+(defn apply-no-msg [msg state])
+
+(defmulti apply-msg apply-type)
+
+(defmethod apply-msg :keep-alive     [msg-bytes state] (apply-no-msg (recv msg-bytes) state))
+(defmethod apply-msg :choke          [msg-bytes state] state)
+(defmethod apply-msg :unchoke        [msg-bytes state] state)
+(defmethod apply-msg :interested     [msg-bytes state] state)
+(defmethod apply-msg :not-interested [msg-bytes state] state)
+(defmethod apply-msg :have           [msg-bytes state] state)
+(defmethod apply-msg :bitfield       [msg-bytes state] state)
+(defmethod apply-msg :request        [msg-bytes state] state)
+(defmethod apply-msg :piece          [msg-bytes state] state)
+(defmethod apply-msg :cancel         [msg-bytes state] state)
+(defmethod apply-msg :port           [msg-bytes state] state)

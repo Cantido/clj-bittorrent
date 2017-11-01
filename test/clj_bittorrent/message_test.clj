@@ -14,3 +14,19 @@
   (is (= 14 (count (msg/message :piece 1 1 [1]))))
   (is (= 17 (count (msg/message :cancel 1 1 1))))
   (is (= 7 (count (msg/message :port 1)))))
+
+
+(deftest apply-msg-test
+  (= {} (msg/apply-msg :keep-alive {}))
+  (= {:client {:choking true :interested false}
+      :peer {:choking false :interested false}}
+     (msg/apply-msg
+       :keep-alive
+       {:client {:choking false :interested false}
+        :peer {:choking false :interested false}}))
+  (= {:client {:choking false :interested false}
+      :peer {:choking false :interested false}}
+     (msg/apply-msg
+       :keep-alive
+       {:client {:choking true :interested false}
+        :peer {:choking false :interested false}})))
