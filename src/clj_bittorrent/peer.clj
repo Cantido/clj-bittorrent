@@ -33,24 +33,49 @@
       info-hash
       peer-id)))
 
-(def connection-start-state
-  {:choking true
+(def peer-default-state
+  {:choked true
    :interested false})
 
-(def start-state
-  {:client connection-start-state
-   :peer connection-start-state})
+(def connection-default-state
+  {:client peer-default-state
+   :peer   peer-default-state})
 
-(defn choke [m]
-  (assoc m :choking true))
+(defn choke
+  "Choke the peer. The peer that is choked will be ignored until it is unchoked."
+  [peer]
+  (assoc peer :choked true))
 
-(defn unchoke [m]
-  (assoc m :choking false))
+(defn unchoke
+  "Unchoke the peer. The peer will no longer be ignored."
+  [peer]
+  (assoc peer :choked false))
 
-(defn download? [m]
-  (and (get-in m [:client :interested])
-       (not (get-in m [:peer :choking]))))
+(defn interested
+  "Mark the peer as interested. An interested peer wants something that
+   other peers have to offer, and will begin requesting blocks."
+  [peer]
+  (assoc peer :interested true))
 
-(defn upload? [m]
-  (and (not (get-in m [:client :choking]))
-       (get-in m [:peer :interested])))
+(defn not-interested
+  "Mark the peer as not interested. A peer that is not interested will not
+   send requests for data to other peers."
+  [peer]
+  (assoc peer :interested false))
+
+(defn transfer-allowed?
+  [from to]
+  (and (not (:choked from))
+       (:interested to)))
+
+(defn download-allowed?
+  "Check if a download is allowed from the given peers."
+  [connection]
+  (transfer-allowed? (:peer connection) (:client connection)))
+
+(defn upload-allowed?
+  "Check if an upload is allowed from the given peers."
+  [connection]
+  (transfer-allowed? (:client connection) (:peer connection)))
+
+

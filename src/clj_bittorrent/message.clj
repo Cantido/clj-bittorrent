@@ -207,24 +207,17 @@
 (defmethod recv :port           [x] (recv-port x))
 
 
-(defn apply-choke [msg state]
-  (update-in state [:client] peer/choke))
+(defn apply-type [x & more] x)
 
-(defn apply-unchoke [msg state]
-  (update-in state [:client] peer/unchoke))
+(defmulti apply-msg
+          "Act upon a message sent by a remote peer."
+          apply-type)
 
-(defn apply-type [x & more]
-  x)
-
-(defn apply-no-msg [state])
-
-(defmulti apply-msg apply-type)
-
-(defmethod apply-msg :keep-alive     [msg state] (apply-no-msg state))
-(defmethod apply-msg :choke          [msg state] state)
-(defmethod apply-msg :unchoke        [msg state] state)
-(defmethod apply-msg :interested     [msg state] state)
-(defmethod apply-msg :not-interested [msg state] state)
+(defmethod apply-msg :keep-alive     [msg state] state)
+(defmethod apply-msg :choke          [msg state] (update-in state [:client] peer/choke))
+(defmethod apply-msg :unchoke        [msg state] (update-in state [:client] peer/unchoke))
+(defmethod apply-msg :interested     [msg state] (update-in state [:peer] peer/interested))
+(defmethod apply-msg :not-interested [msg state] (update-in state [:peer] peer/not-interested))
 (defmethod apply-msg :have           [msg state] state)
 (defmethod apply-msg :bitfield       [msg state] state)
 (defmethod apply-msg :request        [msg state] state)

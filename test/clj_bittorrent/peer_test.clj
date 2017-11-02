@@ -36,21 +36,21 @@
                           :peer-id peer-id}))))
 
 (deftest download?-test
-  (is (= true (peer/download? {:client {:interested true}
-                               :peer {:choking false}})))
-  (is (= false (peer/download? {:client {:interested true}
-                                :peer {:choking true}})))
-  (is (= false (peer/download? {:client {:interested false}
-                                :peer {:choking true}})))
-  (is (= false (peer/download? {:client {:interested false}
-                                :peer {:choking false}}))))
+  (is (= true (peer/download-allowed? {:client {:interested true}
+                               :peer           {:choked false}})))
+  (is (= false (peer/download-allowed? {:client {:interested true}
+                                :peer           {:choked true}})))
+  (is (= false (peer/download-allowed? {:client {:interested false}
+                                :peer           {:choked true}})))
+  (is (= false (peer/download-allowed? {:client {:interested false}
+                                :peer           {:choked false}}))))
 
 (deftest upload?-test
-  (is (= true (peer/upload? {:client {:choking false}
-                             :peer {:interested true}})))
-  (is (= false (peer/upload? {:client {:choking true}
-                              :peer {:interested true}})))
-  (is (= false (peer/upload? {:client {:choking false}
-                              :peer {:interested false}})))
-  (is (= false (peer/upload? {:client {:choking true}
-                              :peer {:interested false}}))))
+  (is (= true (peer/upload-allowed? {:client {:choked false}
+                             :peer           {:interested true}})))
+  (is (= false (peer/upload-allowed? {:client {:choked true}
+                              :peer           {:interested true}})))
+  (is (= false (peer/upload-allowed? {:client {:choked false}
+                              :peer           {:interested false}})))
+  (is (= false (peer/upload-allowed? {:client {:choked true}
+                              :peer           {:interested false}}))))

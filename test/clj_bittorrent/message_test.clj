@@ -1,6 +1,7 @@
 (ns clj-bittorrent.message-test
   (:require [clojure.test :refer :all]
-            [clj-bittorrent.message :as msg]))
+            [clj-bittorrent.message :as msg]
+            [clj-bittorrent.peer :as peer]))
 
 (deftest message-method-test
   (is (= 4 (count (msg/keep-alive))))
@@ -50,17 +51,18 @@
                      [0x09]
                      [0x1b 0x39])))))
 
+(def choked-client (assoc-in peer/connection-default-state [:client :choked] true))
+(def unchoked-client (assoc-in peer/connection-default-state [:client :choked] false))
+(def interested-remote (assoc-in peer/connection-default-state [:peer :interested] true))
+(def uninterested-remote (assoc-in peer/connection-default-state [:peer :interested] false))
+
 (deftest apply-msg-test
-  (= {} (msg/apply-msg :keep-alive {}))
-  (= {:client {:choking true :interested false}
-      :peer {:choking false :interested false}}
-     (msg/apply-msg
-       :keep-alive
-       {:client {:choking false :interested false}
-        :peer {:choking false :interested false}}))
-  (= {:client {:choking false :interested false}
-      :peer {:choking false :interested false}}
-     (msg/apply-msg
-       :keep-alive
-       {:client {:choking true :interested false}
-        :peer {:choking false :interested false}})))
+  (is (= {} (msg/apply-msg :keep-alive {})))
+  (is (= choked-client (msg/apply-msg :choke unchoked-client)))
+  (is (= choked-client (msg/apply-msg :choke choked-client)))
+  (is (= unchoked-client (msg/apply-msg :unchoke choked-client)))
+  (is (= unchoked-client (msg/apply-msg :unchoke unchoked-client)))
+  (is (= interested-remote (msg/apply-msg :interested uninterested-remote)))
+  (is (= interested-remote (msg/apply-msg :interested interested-remote)))
+  (is (= uninterested-remote (msg/apply-msg :not-interested interested-remote)))
+  (is (= uninterested-remote (msg/apply-msg :not-interested uninterested-remote))))
