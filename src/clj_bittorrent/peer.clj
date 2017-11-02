@@ -35,7 +35,9 @@
 
 (def peer-default-state
   {:choked true
-   :interested false})
+   :interested false
+   :pieces #{}
+   :requested #{}})
 
 (def connection-default-state
   {:client peer-default-state
@@ -63,6 +65,17 @@
   [peer]
   (assoc peer :interested false))
 
+(defn remove-blocks-matching-indices [b & ns]
+  (set (remove (comp (set ns)
+                     :index)
+               b)))
+
+(defn add-piece [peer & ns]
+  {:pre [(every? number? ns)]}
+  (-> peer
+    (update :pieces #(clojure.set/union % (set ns)))
+    (update :requested #(apply remove-blocks-matching-indices % ns))))
+
 (defn transfer-allowed?
   [from to]
   (and (not (:choked from))
@@ -77,5 +90,3 @@
   "Check if an upload is allowed from the given peers."
   [connection]
   (transfer-allowed? (:client connection) (:peer connection)))
-
-

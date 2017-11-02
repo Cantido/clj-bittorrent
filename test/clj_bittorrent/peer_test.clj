@@ -37,20 +37,25 @@
 
 (deftest download?-test
   (is (= true (peer/download-allowed? {:client {:interested true}
-                               :peer           {:choked false}})))
+                                       :peer           {:choked false}})))
   (is (= false (peer/download-allowed? {:client {:interested true}
-                                :peer           {:choked true}})))
+                                        :peer           {:choked true}})))
   (is (= false (peer/download-allowed? {:client {:interested false}
-                                :peer           {:choked true}})))
+                                        :peer           {:choked true}})))
   (is (= false (peer/download-allowed? {:client {:interested false}
-                                :peer           {:choked false}}))))
+                                        :peer           {:choked false}}))))
 
 (deftest upload?-test
   (is (= true (peer/upload-allowed? {:client {:choked false}
-                             :peer           {:interested true}})))
+                                     :peer           {:interested true}})))
   (is (= false (peer/upload-allowed? {:client {:choked true}
-                              :peer           {:interested true}})))
+                                      :peer           {:interested true}})))
   (is (= false (peer/upload-allowed? {:client {:choked false}
-                              :peer           {:interested false}})))
+                                      :peer           {:interested false}})))
   (is (= false (peer/upload-allowed? {:client {:choked true}
-                              :peer           {:interested false}}))))
+                                      :peer           {:interested false}}))))
+
+(deftest add-piece-test
+  (is (= {:pieces #{666} :requested #{{:index 420}}}
+         (peer/add-piece {:requested #{{:index 420} {:index 666}}}
+                         666))))
