@@ -50,3 +50,17 @@
                      [0x09]
                      [0x1b 0x39])))))
 
+(deftest apply-msg-test
+  (= {} (msg/apply-msg :keep-alive {}))
+  (= {:client {:choking true :interested false}
+      :peer {:choking false :interested false}}
+     (msg/apply-msg
+       :keep-alive
+       {:client {:choking false :interested false}
+        :peer {:choking false :interested false}}))
+  (= {:client {:choking false :interested false}
+      :peer {:choking false :interested false}}
+     (msg/apply-msg
+       :keep-alive
+       {:client {:choking true :interested false}
+        :peer {:choking false :interested false}})))
