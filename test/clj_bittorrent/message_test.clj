@@ -1,7 +1,40 @@
 (ns clj-bittorrent.message-test
   (:require [clojure.test :refer :all]
             [clj-bittorrent.message :as msg]
-            [clj-bittorrent.peer :as peer]))
+            [clj-bittorrent.connection :as conn]))
+
+(def expected-pstrlen [0x13])
+
+(def expected-pstr
+  [0x42 0x69 0x74 0x54
+   0x6F 0x72 0x72 0x65
+   0x6E 0x74 0x20 0x70
+   0x72 0x6F 0x74 0x6F
+   0x63 0x6F 0x6C])
+
+(def expected-reserved
+  (take 8 (repeat 0x00)))
+
+(def info-hash
+  [0x12 0x34 0x56 0x78 0x9a
+   0xbc 0xde 0xf1 0x23 0x45
+   0x67 0x89 0xab 0xcd 0xef
+   0x12 0x34 0x56 0x78 0x9a])
+
+(def peer-id
+  [0x67 0x89 0xab 0xcd 0xef
+   0x12 0x34 0x56 0x78 0x9a
+   0x12 0x34 0x56 0x78 0x9a
+   0xbc 0xde 0xf1 0x23 0x45])
+
+(deftest handshake-test
+  (is (= (concat expected-pstrlen
+                 expected-pstr
+                 expected-reserved
+                 info-hash
+                 peer-id)
+         (msg/handshake {:info-hash info-hash
+                          :peer-id peer-id}))))
 
 (deftest message-method-test
   (is (= 4 (count (msg/keep-alive))))
@@ -51,15 +84,15 @@
                      [0x09]
                      [0x1b 0x39])))))
 
-(def choked-client (assoc-in peer/connection-default-state [:client :choked] true))
-(def unchoked-client (assoc-in peer/connection-default-state [:client :choked] false))
-(def interested-remote (assoc-in peer/connection-default-state [:peer :interested] true))
-(def uninterested-remote (assoc-in peer/connection-default-state [:peer :interested] false))
-(def peer-with-piece (assoc-in peer/connection-default-state [:peer :pieces] #{6969}))
-(def peer-with-pieces (assoc-in peer/connection-default-state [:peer :pieces] #{6969 420 666}))
-(def peer-with-requested (assoc-in peer/connection-default-state [:peer :requested] #{{:index 6969 :offset 420 :length 666}}))
-(def client-has-piece (assoc-in peer/connection-default-state [:client :pieces] #{{:index 6969 :offset 420 :contents [0x23]}}))
-(def peer-with-port (assoc-in peer/connection-default-state [:peer :port] 6881))
+(def choked-client (assoc-in conn/connection-default-state [:client :choked] true))
+(def unchoked-client (assoc-in conn/connection-default-state [:client :choked] false))
+(def interested-remote (assoc-in conn/connection-default-state [:peer :interested] true))
+(def uninterested-remote (assoc-in conn/connection-default-state [:peer :interested] false))
+(def peer-with-piece (assoc-in conn/connection-default-state [:peer :pieces] #{6969}))
+(def peer-with-pieces (assoc-in conn/connection-default-state [:peer :pieces] #{6969 420 666}))
+(def peer-with-requested (assoc-in conn/connection-default-state [:peer :requested] #{{:index 6969 :offset 420 :length 666}}))
+(def client-has-piece (assoc-in conn/connection-default-state [:client :pieces] #{{:index 6969 :offset 420 :contents [0x23]}}))
+(def peer-with-port (assoc-in conn/connection-default-state [:peer :port] 6881))
 
 (deftest apply-msg-test
   (is (= {} (msg/apply-msg {:id :keep-alive} {})))
@@ -71,13 +104,13 @@
   (is (= interested-remote (msg/apply-msg {:id :interested} interested-remote)))
   (is (= uninterested-remote (msg/apply-msg {:id :not-interested} interested-remote)))
   (is (= uninterested-remote (msg/apply-msg {:id :not-interested} uninterested-remote)))
-  (is (= peer-with-piece (msg/apply-msg {:id :have :index 6969} peer/connection-default-state)))
+  (is (= peer-with-piece (msg/apply-msg {:id :have :index 6969} conn/connection-default-state)))
   (is (= peer-with-piece (msg/apply-msg {:id :have :index 6969} peer-with-piece)))
   (is (= peer-with-piece (msg/apply-msg {:id :have :index 6969} peer-with-requested)))
-  (is (= peer-with-pieces (msg/apply-msg {:id :bitfield :indices #{6969 420 666}} peer/connection-default-state)))
+  (is (= peer-with-pieces (msg/apply-msg {:id :bitfield :indices #{6969 420 666}} conn/connection-default-state)))
   (is (= peer-with-pieces (msg/apply-msg {:id :bitfield :indices #{6969 420 666}} peer-with-piece)))
   (is (= peer-with-pieces (msg/apply-msg {:id :bitfield :indices #{6969 420 666}} peer-with-piece)))
   (is (= peer-with-requested (msg/apply-msg {:id :request :index 6969 :offset 420 :length 666} peer-with-piece)))
-  (is (= (:client client-has-piece) (:client (msg/apply-msg {:id :piece :index 6969 :offset 420 :contents [0x23]} peer/connection-default-state))))
-  (is (= (:peer peer/connection-default-state) (:peer (msg/apply-msg {:id :cancel :index 6969 :offset 420 :length 666} peer-with-requested))))
-  (is (= (:peer peer-with-port) (:peer (msg/apply-msg {:id :port :port 6881} peer/connection-default-state)))))
+  (is (= (:client client-has-piece) (:client (msg/apply-msg {:id :piece :index 6969 :offset 420 :contents [0x23]} conn/connection-default-state))))
+  (is (= (:peer conn/connection-default-state) (:peer (msg/apply-msg {:id :cancel :index 6969 :offset 420 :length 666} peer-with-requested))))
+  (is (= (:peer peer-with-port) (:peer (msg/apply-msg {:id :port :port 6881} conn/connection-default-state)))))

@@ -1,47 +1,14 @@
 (ns clj-bittorrent.peer
-  "Interact with peers."
-  (:require [clj-bittorrent.binary :as bin])
+  "Manipulate peer maps."
+  (:require [clj-bittorrent.binary :as bin]
+            [clojure.set :as s])
   (:import (java.nio.charset StandardCharsets)))
-
-(def ^:private pstr
-  "string identifier of the protocol."
-  (-> "BitTorrent protocol"
-    (.getBytes StandardCharsets/US_ASCII)
-    (seq)))
-
-(def ^:private pstrlen
-  "length of protocol identifier"
-  (count pstr))
-
-(def ^:private reserved
-  "Bytes reserved for future versions of the protocol."
-  (take 8 (repeat 0x00)))
-
-(defn handshake
-  "Assembles and returns a handshake packet for m."
-  [m]
-  {:pre  [(= 20 (count (:info-hash m)))
-          (= 20 (count (:peer-id m)))]
-   :post [(= 68 (count (seq %)))
-          (every? bin/ubyte? %)]}
-  (let [{:keys [info-hash
-                peer-id]} m]
-    (concat
-      (list pstrlen)
-      pstr
-      reserved
-      info-hash
-      peer-id)))
 
 (def peer-default-state
   {:choked true
    :interested false
    :pieces #{}
    :requested #{}})
-
-(def connection-default-state
-  {:client peer-default-state
-   :peer   peer-default-state})
 
 (defn choke
   "Choke the peer. The peer that is choked will be ignored until it is unchoked."
@@ -72,9 +39,9 @@
 
 (defn add-piece [peer & ns]
   {:pre [(every? number? ns)]
-   :post [(clojure.set/subset? ns (:pieces %))]}
+   :post [(s/subset? ns (:pieces %))]}
   (-> peer
-    (update :pieces #(clojure.set/union % (set ns)))
+    (update :pieces #(s/union % (set ns)))
     (update :requested #(apply remove-blocks-matching-indices % ns))))
 
 (defn request [peer block]
@@ -86,18 +53,3 @@
   (-> peer
     (update :pieces #(disj % (:index block)))
     (update :requested #(conj % block))))
-
-(defn transfer-allowed?
-  [from to]
-  (and (not (:choked from))
-       (:interested to)))
-
-(defn download-allowed?
-  "Check if a download is allowed from the given peers."
-  [connection]
-  (transfer-allowed? (:peer connection) (:client connection)))
-
-(defn upload-allowed?
-  "Check if an upload is allowed from the given peers."
-  [connection]
-  (transfer-allowed? (:client connection) (:peer connection)))
