@@ -31,7 +31,7 @@
                      [0x00 0x00 0x00 0x01]
                      [0x00 0x00 0x00 0x02]
                      [0x00 0x00 0x00 0x03]))))
-  (is (= {:id :piece :index 7 :offset 12 :block (seq [0x12 0x34 0x56 0x78 0x9a])}
+  (is (= {:id :piece :index 7 :offset 12 :contents (seq [0x12 0x34 0x56 0x78 0x9a])}
          (msg/recv (concat
                      [0x00 0x00 0x00 0x0D]
                      [0x07]
@@ -58,7 +58,8 @@
 (def peer-with-piece (assoc-in peer/connection-default-state [:peer :pieces] #{6969}))
 (def peer-with-pieces (assoc-in peer/connection-default-state [:peer :pieces] #{6969 420 666}))
 (def peer-with-requested (assoc-in peer/connection-default-state [:peer :requested] #{{:index 6969 :offset 420 :length 666}}))
-(def client-has-piece (assoc-in peer/connection-default-state [:client :pieces] #{{:index 6969 :offset 420 :length 1 :contents [0x23]}}))
+(def client-has-piece (assoc-in peer/connection-default-state [:client :pieces] #{{:index 6969 :offset 420 :contents [0x23]}}))
+(def peer-with-port (assoc-in peer/connection-default-state [:peer :port] 6881))
 
 (deftest apply-msg-test
   (is (= {} (msg/apply-msg {:id :keep-alive} {})))
@@ -76,4 +77,7 @@
   (is (= peer-with-pieces (msg/apply-msg {:id :bitfield :indices #{6969 420 666}} peer/connection-default-state)))
   (is (= peer-with-pieces (msg/apply-msg {:id :bitfield :indices #{6969 420 666}} peer-with-piece)))
   (is (= peer-with-pieces (msg/apply-msg {:id :bitfield :indices #{6969 420 666}} peer-with-piece)))
-  (is (= peer-with-requested) (msg/apply-msg {:id :request :index 6969 :offset 420 :length 666} peer-with-piece)))
+  (is (= peer-with-requested (msg/apply-msg {:id :request :index 6969 :offset 420 :length 666} peer-with-piece)))
+  (is (= (:client client-has-piece) (:client (msg/apply-msg {:id :piece :index 6969 :offset 420 :contents [0x23]} peer/connection-default-state))))
+  (is (= (:peer peer/connection-default-state) (:peer (msg/apply-msg {:id :cancel :index 6969 :offset 420 :length 666} peer-with-requested))))
+  (is (= (:peer peer-with-port) (:peer (msg/apply-msg {:id :port :port 6881} peer/connection-default-state)))))

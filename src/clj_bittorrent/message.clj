@@ -184,7 +184,7 @@
     {:id :piece
      :index (bin/int-from-bytes index)
      :offset (bin/int-from-bytes begin)
-     :block block}))
+     :contents block}))
 
 (defn- recv-port [xs]
   {:id :port :port (bin/int-from-bytes (payload xs))})
@@ -220,7 +220,7 @@
 (defmethod apply-msg :not-interested [msg state] (update-in state [:peer] peer/not-interested))
 (defmethod apply-msg :have           [msg state] (update-in state [:peer] #(peer/add-piece % (:index msg))))
 (defmethod apply-msg :bitfield       [msg state] (update-in state [:peer] #(apply peer/add-piece % (:indices msg))))
-(defmethod apply-msg :request        [msg state] (update-in state [:peer] #(peer/request % (select-keys msg[:index :offset :length]))))
-(defmethod apply-msg :piece          [msg state] state)
-(defmethod apply-msg :cancel         [msg state] state)
-(defmethod apply-msg :port           [msg state] state)
+(defmethod apply-msg :request        [msg state] (update-in state [:peer] #(peer/request % (select-keys msg [:index :offset :length]))))
+(defmethod apply-msg :piece          [msg state] (update-in state [:client :pieces] #(conj % (select-keys msg [:index :offset :contents]))))
+(defmethod apply-msg :cancel         [msg state] (update-in state [:peer :requested] #(disj % (select-keys msg [:index :offset :length]))))
+(defmethod apply-msg :port           [msg state] (assoc-in state [:peer :port] (:port msg)))
