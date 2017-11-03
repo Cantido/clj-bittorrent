@@ -82,7 +82,7 @@
          (not (neg? (:offset block)))
          (pos? (:length block))]
    :post [(not (contains? (:pieces %) (:index block)))
-          (contains? block (:requested %))]}
+          (contains? (:requested %) block)]}
   (-> peer
     (update :pieces #(disj % (:index block)))
     (update :requested #(conj % block))))
