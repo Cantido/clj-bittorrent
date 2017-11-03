@@ -32,7 +32,7 @@
   [peer]
   (assoc peer :interested false))
 
-(defn remove-blocks-matching-indices [b & ns]
+(defn- remove-blocks-matching-indices [b & ns]
   (set (remove (comp (set ns)
                      :index)
                b)))
@@ -42,14 +42,18 @@
    :post [(s/subset? ns (:pieces %))]}
   (-> peer
     (update :pieces #(s/union % (set ns)))
-    (update :requested #(apply remove-blocks-matching-indices % ns))))
+    (update :requested #(set (apply remove-blocks-matching-indices % ns)))))
 
 (defn request [peer block]
-  {:pre [(not (neg? (:index block)))
+  {:pre [(some? block)
+         (some? (:index block))
+         (some? (:offset block))
+         (some? (:length block))
+         (not (neg? (:index block)))
          (not (neg? (:offset block)))
          (pos? (:length block))]
    :post [(not (contains? (:pieces %) (:index block)))
           (contains? (:requested %) block)]}
   (-> peer
-    (update :pieces #(disj % (:index block)))
-    (update :requested #(conj % block))))
+    (update :pieces #(set (disj % (:index block))))
+    (update :requested #(set (conj % block)))))
