@@ -169,13 +169,13 @@
 
 (defn- recv-request [xs]
   (merge {:id :request}
-         (zipmap [:index :begin :length]
+         (zipmap [:index :offset :length]
                  (drop 2 (map bin/int-from-bytes
                               (split-message xs 4 1 4 4))))))
 
 (defn- recv-cancel [xs]
   (merge {:id :cancel}
-         (zipmap [:index :begin :length]
+         (zipmap [:index :offset :length]
                  (drop 2 (map bin/int-from-bytes
                               (split-message xs 4 1 4 4))))))
 
@@ -183,7 +183,7 @@
   (let [[len id index begin block] (split-message xs 4 1 4 4)]
     {:id :piece
      :index (bin/int-from-bytes index)
-     :begin (bin/int-from-bytes begin)
+     :offset (bin/int-from-bytes begin)
      :block block}))
 
 (defn- recv-port [xs]
@@ -220,7 +220,7 @@
 (defmethod apply-msg :not-interested [msg state] (update-in state [:peer] peer/not-interested))
 (defmethod apply-msg :have           [msg state] (update-in state [:peer] #(peer/add-piece % (:index msg))))
 (defmethod apply-msg :bitfield       [msg state] (update-in state [:peer] #(apply peer/add-piece % (:indices msg))))
-(defmethod apply-msg :request        [msg state] state)
+(defmethod apply-msg :request        [msg state] (update-in state [:peer] #(peer/request % (select-keys msg[:index :offset :length]))))
 (defmethod apply-msg :piece          [msg state] state)
 (defmethod apply-msg :cancel         [msg state] state)
 (defmethod apply-msg :port           [msg state] state)

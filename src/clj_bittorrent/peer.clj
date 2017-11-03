@@ -71,10 +71,20 @@
                b)))
 
 (defn add-piece [peer & ns]
-  {:pre [(every? number? ns)]}
+  {:pre [(every? number? ns)]
+   :post [(clojure.set/subset? ns (:pieces %))]}
   (-> peer
     (update :pieces #(clojure.set/union % (set ns)))
     (update :requested #(apply remove-blocks-matching-indices % ns))))
+
+(defn request [peer block]
+  {:pre [(not (neg? (:index block)))
+         (not (neg? (:offset block)))
+         (pos? (:length block))]
+   :post [(not (contains? (:pieces %) (:index block)))]}
+  (-> peer
+    (update :pieces #(disj % (:index block)))
+    (update :requested #(conj % block))))
 
 (defn transfer-allowed?
   [from to]

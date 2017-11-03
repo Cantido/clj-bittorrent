@@ -24,21 +24,21 @@
   (is (= {:id :not-interested} (msg/recv [0x00 0x00 0x00 0x00 0x03])))
   (is (= {:id :have :index 6969} (msg/recv [0x00 0x00 0x00 0x00 0x04 0x1b 0x39])))
   (is (= {:id :bitfield :indices #{1}} (msg/recv [0x00 0x00 0x00 0x00 0x05 0x40])))
-  (is (= {:id :request :index 1 :begin 2 :length 3}
+  (is (= {:id :request :index 1 :offset 2 :length 3}
          (msg/recv (concat
                      [0x00 0x00 0x00 13]
                      [0x06]
                      [0x00 0x00 0x00 0x01]
                      [0x00 0x00 0x00 0x02]
                      [0x00 0x00 0x00 0x03]))))
-  (is (= {:id :piece :index 7 :begin 12 :block (seq [0x12 0x34 0x56 0x78 0x9a])}
+  (is (= {:id :piece :index 7 :offset 12 :block (seq [0x12 0x34 0x56 0x78 0x9a])}
          (msg/recv (concat
                      [0x00 0x00 0x00 0x0D]
                      [0x07]
                      [0x00 0x00 0x00 0x07]
                      [0x00 0x00 0x00 0x0c]
                      [0x12 0x34 0x56 0x78 0x9a]))))
-  (is (= {:id :cancel :index 1 :begin 2 :length 3}
+  (is (= {:id :cancel :index 1 :offset 2 :length 3}
          (msg/recv (concat
                      [0x00 0x00 0x00 13]
                      [0x08]
@@ -58,6 +58,7 @@
 (def peer-with-piece (assoc-in peer/connection-default-state [:peer :pieces] #{6969}))
 (def peer-with-pieces (assoc-in peer/connection-default-state [:peer :pieces] #{6969 420 666}))
 (def peer-with-requested (assoc-in peer/connection-default-state [:peer :requested] #{{:index 6969 :offset 420 :length 666}}))
+(def client-has-piece (assoc-in peer/connection-default-state [:client :pieces] #{{:index 6969 :offset 420 :length 1 :contents [0x23]}}))
 
 (deftest apply-msg-test
   (is (= {} (msg/apply-msg {:id :keep-alive} {})))
@@ -75,4 +76,4 @@
   (is (= peer-with-pieces (msg/apply-msg {:id :bitfield :indices #{6969 420 666}} peer/connection-default-state)))
   (is (= peer-with-pieces (msg/apply-msg {:id :bitfield :indices #{6969 420 666}} peer-with-piece)))
   (is (= peer-with-pieces (msg/apply-msg {:id :bitfield :indices #{6969 420 666}} peer-with-piece)))
-  (is (= peer-with-requested (msg/apply-msg {:id :request :indices #{6969 420 666}} peer-with-piece))))
+  (is (= peer-with-requested) (msg/apply-msg {:id :request :index 6969 :offset 420 :length 666} peer-with-piece)))
