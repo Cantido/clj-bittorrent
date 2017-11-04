@@ -7,7 +7,8 @@
 (def peer-default-state
   {:choked true
    :interested false
-   :pieces #{}
+   :have #{}
+   :blocks #{}
    :requested #{}})
 
 (defn choke
@@ -32,17 +33,77 @@
   [peer]
   (assoc peer :interested false))
 
-(defn- remove-blocks-matching-indices [b & ns]
-  (set (remove (comp (set ns)
-                     :index)
-               b)))
+(defn- keys=
+  "Compare a's and b's value for key k."
+  ([k x] true)
+  ([k x y] (= (k x) (k y)))
+  ([k x y & more]
+   (if (keys= k x y)
+     (if (next more)
+       (recur k y (first more) (next more))
+       (keys= k y (first more)))
+     false)))
 
-(defn add-piece [peer & ns]
+(defn- sequential-blocks?
+  "Returns true if a is immediately followed by b"
+  [a b]
+  (= (+ (:offset a) (count (:contents a)))
+     (:offset b)))
+
+(defn- adjacent-blocks? [a b]
+  (or (sequential-blocks? a b)
+      (sequential-blocks? b a)))
+
+(defn- concat-blocks
+  "Join two blocks into one larger block"
+  ([a b]
+   {:post [(= (count (:contents %))
+              (+ (count (:contents a))
+                 (count (:contents b))))]}
+   (cond
+     (nil? a) b
+     (nil? b) a
+     :else
+     (do
+       (assert (keys= :index a b))
+       (assert (not (keys= :offset a b)))
+       (assert (adjacent-blocks? a b))
+       (if (< (:offset a) (:offset b))
+         (do
+           (assert (sequential-blocks? a b))
+           (update a :contents #(concat % (:contents b))))
+         (do
+           (assert (sequential-blocks? b a))
+           (update b :contents #(concat % (:contents a))))))))
+  ([a b & more]
+   (reduce concat-blocks (concat-blocks a b) more)))
+
+(defn- conj-condense
+  "Adds x to the set s, condensing it into another block if possible."
+  [s x]
+  (let [[adj1 adj2] (filter (partial adjacent-blocks? x) s)
+        superblock (concat-blocks adj1 x adj2)
+        shrunken-s (disj s adj1 adj2)]
+    (conj shrunken-s superblock)))
+
+(defn- remove-blocks-matching-indices
+  ([b n] (remove #(= n (:index %)) b))
+  ([b n & ns]
+   (reduce remove-blocks-matching-indices
+           (remove-blocks-matching-indices b n)
+           ns)))
+
+(defn has-piece [peer & ns]
   {:pre [(every? number? ns)]
-   :post [(s/subset? ns (:pieces %))]}
+   :post [(s/subset? ns (:have %))]}
   (-> peer
-    (update :pieces #(s/union % (set ns)))
+    (update :have #(s/union % (set ns)))
     (update :requested #(set (apply remove-blocks-matching-indices % ns)))))
+
+(defn add-block [peer block]
+  (-> peer
+    (update :blocks #(conj-condense % (select-keys block [:index :offset :contents])))
+    (update :requested #(set (remove-blocks-matching-indices % (:index block))))))
 
 (defn request [peer block]
   {:pre [(some? block)
@@ -52,8 +113,8 @@
          (not (neg? (:index block)))
          (not (neg? (:offset block)))
          (pos? (:length block))]
-   :post [(not (contains? (:pieces %) (:index block)))
+   :post [(not (contains? (:have %) (:index block)))
           (contains? (:requested %) block)]}
   (-> peer
-    (update :pieces #(set (disj % (:index block))))
+    (update :have #(set (disj % (:index block))))
     (update :requested #(set (conj % block)))))

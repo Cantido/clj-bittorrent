@@ -88,10 +88,10 @@
 (def unchoked-client (assoc-in conn/connection-default-state [:client :choked] false))
 (def interested-remote (assoc-in conn/connection-default-state [:peer :interested] true))
 (def uninterested-remote (assoc-in conn/connection-default-state [:peer :interested] false))
-(def peer-with-piece (assoc-in conn/connection-default-state [:peer :pieces] #{6969}))
-(def peer-with-pieces (assoc-in conn/connection-default-state [:peer :pieces] #{6969 420 666}))
+(def peer-with-piece (assoc-in conn/connection-default-state [:peer :have] #{6969}))
+(def peer-with-pieces (assoc-in conn/connection-default-state [:peer :have] #{6969 420 666}))
 (def peer-with-requested (assoc-in conn/connection-default-state [:peer :requested] #{{:index 6969 :offset 420 :length 666}}))
-(def client-has-piece (assoc-in conn/connection-default-state [:client :pieces] #{{:index 6969 :offset 420 :contents [0x23]}}))
+(def client-has-piece (assoc-in conn/connection-default-state [:client :blocks] #{{:index 6969 :offset 420 :contents [0x23]}}))
 (def peer-with-port (assoc-in conn/connection-default-state [:peer :port] 6881))
 
 (deftest apply-msg-test
