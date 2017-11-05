@@ -252,7 +252,7 @@
 (defmethod apply-msg :not-interested [msg state] (update-in state [:peer] peer/not-interested))
 (defmethod apply-msg :have           [msg state] (update-in state [:peer] #(peer/has-piece % (:index msg))))
 (defmethod apply-msg :bitfield       [msg state] (update-in state [:peer] #(apply peer/has-piece % (:indices msg))))
-(defmethod apply-msg :request        [msg state] (update-in state [:peer] #(peer/request % (select-keys msg [:index :offset :length]))))
+(defmethod apply-msg :request        [msg state] (update-in state [:peer] #(peer/request-block % (select-keys msg [:index :offset :length]))))
 (defmethod apply-msg :piece          [msg state] (update-in state [:client] #(peer/add-block % (select-keys msg [:index :offset :contents]))))
 (defmethod apply-msg :cancel         [msg state] (update-in state [:peer :requested] #(disj % (select-keys msg [:index :offset :length]))))
 (defmethod apply-msg :port           [msg state] (assoc-in state [:peer :port] (:port msg)))

@@ -1,6 +1,7 @@
 (ns clj-bittorrent.peer
   "Manipulate peer maps."
   (:require [clj-bittorrent.binary :as bin]
+            [clj-bittorrent.blocks :as blocks]
             [clojure.set :as s])
   (:import (java.nio.charset StandardCharsets)))
 
@@ -33,79 +34,37 @@
   [peer]
   (assoc peer :interested false))
 
-(defn- keys=
-  "Compare a's and b's value for key k."
-  ([k x] true)
-  ([k x y] (= (k x) (k y)))
-  ([k x y & more]
-   (if (keys= k x y)
-     (if (next more)
-       (recur k y (first more) (next more))
-       (keys= k y (first more)))
-     false)))
+(defn- index? [x]
+  (and (number? x)
+       (not (neg? x))))
 
-(defn- sequential-blocks?
-  "Returns true if a is immediately followed by b"
-  [a b]
-  (= (+ (:offset a) (count (:contents a)))
-     (:offset b)))
+(defn- un-request-blocks
+  ([peer index-or-block]
+   {:pre [(or (index? index-or-block)
+              (map? index-or-block))]
+    :post [(set? (:requested %))]}
+   (let [index (if (number? index-or-block)
+                 index-or-block
+                 (:index index-or-block))]
+     (update peer :requested #(blocks/remove-blocks-matching-indices % index)))))
 
-(defn- adjacent-blocks? [a b]
-  (or (sequential-blocks? a b)
-      (sequential-blocks? b a)))
+(defn has-piece
+  "Update the peer to say they have piece n. Also clears that piece from
+   the set of requested blocks, since the peer has it already."
+  ([peer n]
+   {:pre [(number? n) (map? peer)]
+    :post [(set? (:have %))
+           (contains? (:have %) n)]}
+   (-> peer
+       (update :have (partial s/union #{n}))
+       (un-request-blocks n)))
+  ([peer n & ns]
+   (reduce has-piece (has-piece peer n) ns)))
 
-(defn- concat-blocks
-  "Join two blocks into one larger block"
-  ([a b]
-   {:post [(= (count (:contents %))
-              (+ (count (:contents a))
-                 (count (:contents b))))]}
-   (cond
-     (nil? a) b
-     (nil? b) a
-     :else
-     (do
-       (assert (keys= :index a b))
-       (assert (not (keys= :offset a b)))
-       (assert (adjacent-blocks? a b))
-       (if (< (:offset a) (:offset b))
-         (do
-           (assert (sequential-blocks? a b))
-           (update a :contents #(concat % (:contents b))))
-         (do
-           (assert (sequential-blocks? b a))
-           (update b :contents #(concat % (:contents a))))))))
-  ([a b & more]
-   (reduce concat-blocks (concat-blocks a b) more)))
-
-(defn- conj-condense
-  "Adds x to the set s, condensing it into another block if possible."
-  [s x]
-  (let [[adj1 adj2] (filter (partial adjacent-blocks? x) s)
-        superblock (concat-blocks adj1 x adj2)
-        shrunken-s (disj s adj1 adj2)]
-    (conj shrunken-s superblock)))
-
-(defn- remove-blocks-matching-indices
-  ([b n] (remove #(= n (:index %)) b))
-  ([b n & ns]
-   (reduce remove-blocks-matching-indices
-           (remove-blocks-matching-indices b n)
-           ns)))
-
-(defn has-piece [peer & ns]
-  {:pre [(every? number? ns)]
-   :post [(s/subset? ns (:have %))]}
-  (-> peer
-    (update :have #(s/union % (set ns)))
-    (update :requested #(set (apply remove-blocks-matching-indices % ns)))))
-
-(defn add-block [peer block]
-  (-> peer
-    (update :blocks #(conj-condense % (select-keys block [:index :offset :contents])))
-    (update :requested #(set (remove-blocks-matching-indices % (:index block))))))
-
-(defn request [peer block]
+(defn request-block
+  "Add a request for a block to a peer. If the peer has that block in their
+   \"have\" set, then that block is also removed from that set."
+  [peer block]
   {:pre [(some? block)
          (some? (:index block))
          (some? (:offset block))
@@ -116,5 +75,14 @@
    :post [(not (contains? (:have %) (:index block)))
           (contains? (:requested %) block)]}
   (-> peer
-    (update :have #(set (disj % (:index block))))
-    (update :requested #(set (conj % block)))))
+      (update :have #(set (disj % (:index block))))
+      (update :requested #(set (conj % block)))))
+
+(defn add-block
+  "Add a block of data to a peer. If the peer requested the given block, that
+   block will be removed from the requested set as well."
+  [peer block]
+  (-> peer
+      (update :blocks #(blocks/conj-condense % (select-keys block [:index :offset :contents])))
+      (un-request-blocks block)))
+
