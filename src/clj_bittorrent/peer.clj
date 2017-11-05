@@ -56,7 +56,7 @@
     :post [(set? (:have %))
            (contains? (:have %) n)]}
    (-> peer
-       (update :have (partial s/union #{n}))
+       (update :have #(conj (set %) n))
        (un-request-blocks n)))
   ([peer n & ns]
    (reduce has-piece (has-piece peer n) ns)))
@@ -75,14 +75,14 @@
    :post [(not (contains? (:have %) (:index block)))
           (contains? (:requested %) block)]}
   (-> peer
-      (update :have #(set (disj % (:index block))))
-      (update :requested #(set (conj % block)))))
+      (update :have #(disj (set %) (:index block)))
+      (update :requested #(conj (set %) block))))
 
 (defn add-block
   "Add a block of data to a peer. If the peer requested the given block, that
    block will be removed from the requested set as well."
   [peer block]
   (-> peer
-      (update :blocks #(blocks/conj-condense % (select-keys block [:index :offset :contents])))
+      (update :blocks #(blocks/conj-condense (set %) (select-keys block [:index :offset :contents])))
       (un-request-blocks block)))
 

@@ -69,5 +69,5 @@
   [s x]
   (let [[adj1 adj2] (filter (partial adjacent-blocks? x) s)
         superblock (concat-blocks adj1 x adj2)
-        shrunken-s (disj s adj1 adj2)]
-    (conj shrunken-s superblock)))
+        shrunken-s (disj (set s) adj1 adj2)]
+    (conj (set shrunken-s) superblock)))
