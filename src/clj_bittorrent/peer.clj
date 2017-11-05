@@ -76,6 +76,7 @@
    block will be removed from the requested set as well."
   [peer block]
   (-> peer
-      (update :blocks #(blocks/conj-condense (set %) (select-keys block [:index :offset :contents])))
+      (update :blocks #(blocks/conj-condense (set %)
+                                             (select-keys block [:index :offset :contents])))
       (un-request-blocks block)))
 
