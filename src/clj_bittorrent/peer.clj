@@ -65,14 +65,7 @@
   "Add a request for a block to a peer. If the peer has that block in their
    \"have\" set, then that block is also removed from that set."
   [peer block]
-  {:pre [(some? block)
-         (some? (:index block))
-         (some? (:offset block))
-         (some? (:length block))
-         (not (neg? (:index block)))
-         (not (neg? (:offset block)))
-         (pos? (:length block))]
-   :post [(not (contains? (:have %) (:index block)))
+  {:post [(not (contains? (:have %) (:index block)))
           (contains? (:requested %) block)]}
   (-> peer
       (update :have #(disj (set %) (:index block)))
