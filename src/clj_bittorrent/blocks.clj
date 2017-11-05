@@ -1,13 +1,14 @@
 (ns clj-bittorrent.blocks
   (:require [clojure.set :as s]
             [schema.core :as schema]
-            [clj-bittorrent.numbers :as n]))
+            [clj-bittorrent.numbers :as n]
+            [clj-bittorrent.binary :as bin]))
 
 (def BlockData
   "A piece is made up of several blocks of binary data."
-  {:index n/Index
-   :offset n/Index
-   :contents [schema/Int]})
+  {:index    n/Index
+   :offset   n/Index
+   :contents [bin/SignedByte]})
 
 (def BlockId
   "A piece is made up of several blocks of binary data."

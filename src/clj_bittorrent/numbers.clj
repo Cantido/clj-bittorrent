@@ -5,10 +5,21 @@
   (not (neg? x)))
 
 (def NonNegativeInt
+  "A number zero or greater."
   (schema/constrained schema/Int nonneg?))
 
-(def Index NonNegativeInt)
+;; I am aware that indexes, lengths, and counts are all the same thing,
+;; but I like making a descriptive schema like this, even if it leads
+;; to a little repetition.
 
-(def Length NonNegativeInt)
+(def Index
+  "A non-negative number, in the valid range for indexing some collection."
+  NonNegativeInt)
 
-(def Count NonNegativeInt)
+(def Length
+  "A non-negative number that can represent an array's length."
+  NonNegativeInt)
+
+(def Count
+  "A non-negative number that can represent a count of things."
+  NonNegativeInt)

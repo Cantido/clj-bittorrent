@@ -7,12 +7,37 @@
             [clj-bittorrent.numbers :as n])
   (:import (java.nio.charset StandardCharsets)))
 
+(def PeerId
+  "A unique identifier for a peer."
+  (schema/constrained [bin/SignedByte] #(= 20 (count %))))
+
+(def Choked
+  "A choked peer is not allowed to request data."
+  schema/Bool)
+
+(def Interested
+  "An interested peer may start requesting blocks if it is unchoked."
+  schema/Bool)
+
+(def HasPieces
+  "The pieces that a peer already has, zero-indexed."
+  #{n/Index})
+
+(def HasBlocks
+  "The blocks (partial pieces) that a peer already has."
+  #{blocks/BlockData})
+
+(def RequestedBlocks
+  "The IDs of blocks that a peer has requested."
+  #{blocks/BlockId})
+
 (def Peer
-  {:choked schema/Bool
-   :interested schema/Bool
-   :have #{n/Index}
-   :blocks #{blocks/BlockData}
-   :requested #{blocks/BlockId}})
+  "A peer is trying to download or upload pieces of a file."
+  {:choked     Choked
+   :interested Interested
+   :have       HasPieces
+   :blocks     HasBlocks
+   :requested  RequestedBlocks})
 
 (def peer-default-state
   {:choked true

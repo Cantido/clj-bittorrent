@@ -9,6 +9,7 @@
             [clj-bittorrent.numbers :as n]))
 
 (def SingleFileInfo
+  "Describes a file in a single-file torrent metainfo file."
   {:length n/Length
    :md5sum schema/Str
    :name schema/Str
@@ -16,16 +17,20 @@
    :pieces [schema/Int]})
 
 (def FileInfo
+  "Describes a single file in a multi-file metainfo file."
   {:length n/Length
    :md5sum schema/Str
    :path [schema/Str]})
 
 (def MultiFileInfo
+  "Describes all files contained in a multi-file metainfo file.."
   {:name schema/Str
    :piece-length n/Length
    :pieces [schema/Int]})
 
 (def Metainfo
+  "Describes a single file or multiple files that can be downloaded from peers
+   provided by provided announce server."
   {:announce      schema/Str
    :announce-list [schema/Str]
    :created-by    schema/Str

@@ -1,6 +1,7 @@
 (ns clj-bittorrent.binary
   "Byte-manipulation functions."
-  (:require [clojure.string :as string]))
+  (:require [clojure.string :as string]
+            [schema.core :as schema]))
 
 (defn max-at-bits [n]
  (bigint (Math/pow 2 n)))
@@ -46,6 +47,9 @@
 (defn ubyte? ^Boolean [x] (fits-in-bytes-unsigned 1 x))
 (defn sbyte? ^Boolean [x] (fits-in-bytes-signed 1 x))
 (defn sint? ^Boolean [x] (fits-in-bytes-signed 4 x))
+
+(def SignedByte (schema/constrained schema/Int sbyte?))
+(def UnsignedByte (schema/constrained schema/Int ubyte?))
 
 (defn ubyte
   "converts a signed byte to an unsigned byte.

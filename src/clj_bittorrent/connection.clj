@@ -3,6 +3,7 @@
   (:require [clj-bittorrent.peer :as peer]))
 
 (def Connection
+  "A connection between the local peer (AKA \"client\") and a remote peer."
   {:client peer/Peer
    :peer peer/Peer})
 

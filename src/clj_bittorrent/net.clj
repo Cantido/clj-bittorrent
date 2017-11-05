@@ -2,4 +2,16 @@
   (:require [schema.core :as schema]
             [clj-bittorrent.numbers :as n]))
 
-(def Port n/NonNegativeInt)
+(defn port?
+  "Returns true if x is a number within the range of valid port numbers."
+  [x]
+  (and (number? x)
+       (<= 1 x 65535)))
+
+(def Port
+  "A network port number."
+  (schema/constrained schema/Int port?))
+
+(def IpAddress
+  "An IPv4 or IPv6 address."
+  schema/Str)

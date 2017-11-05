@@ -6,15 +6,38 @@
             [clj-bittorrent.binary :as bin]
             [clj-bittorrent.net :as net]
             [clj-bittorrent.numbers :as n]
-            [schema.core :as schema]))
+            [schema.core :as schema]
+            [clj-bittorrent.peer :as peer]))
+
+(def FailureReason
+  "A human-readable string containing an error message with the reason that
+   an attempt to join a torrent swarm has failed."
+  schema/Str)
+
+(def Interval
+  "The amount of time that a peer should wait between consecutive
+  regular requests."
+  n/NonNegativeInt)
+
+(def CompleteCount
+  "The number of online peers with complete copies of the torrent."
+  n/Count)
+
+(def IncompleteCount
+  "The number of online peers downloading the torrent.")
 
 (def IsCompact
-  (schema/constrained schema/Int #{0 1}))
+  "If the client wants the peers list to be compressed into six-byte
+   representations instead of the usual dict."
+  (schema/enum 0 1))
 
 (def Event
+  "The state of the client's download."
   (schema/enum "started" "stopped" "completed"))
 
 (def TrackerRequest
+  "A request sent by a peer to get peers from a tracker, and to inform the
+   tracker of its download status."
   {:port     net/Port
    :uploaded n/Count
    :downloaded n/Count
@@ -25,15 +48,18 @@
    :numwant n/Count})
 
 (def PeerResponse
-  {"peer id" schema/Str
-   "ip" schema/Str
-   "port" net/Port})
+  "One peer that can be contacted to download a file."
+  {"peer id" peer/PeerId
+   "ip"      net/IpAddress
+   "port"    net/Port})
 
 (def TrackerResponse
-  {"failure reason" schema/Str
-   "interval" n/NonNegativeInt
-   "complete" n/Count
-   "incomplete" n/Count
+  "The overall state of a BitTorrent network's download, including peers to
+   contact to download it yourself."
+  {"failure reason" FailureReason
+   "interval" Interval
+   "complete" CompleteCount
+   "incomplete" IncompleteCount
    "peers" [PeerResponse]})
 
 (defn- decode-peer-binary-entry [s]
