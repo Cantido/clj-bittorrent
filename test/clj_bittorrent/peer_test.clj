@@ -56,9 +56,5 @@
                     piece-one)))))
 
 (deftest request-test
-  (is (thrown? AssertionError (:requested (peer/request-block {} {}))))
-  (is (thrown? AssertionError (:requested (peer/request-block {} {:index -1 :offset 222 :length 333}))))
-  (is (thrown? AssertionError (:requested (peer/request-block {} {:index 111 :offset -1 :length 333}))))
-  (is (thrown? AssertionError (:requested (peer/request-block {} {:index 111 :offset 222 :length 0}))))
   (is (= #{{:index 0 :offset 0 :length 1}} (:requested (peer/request-block {} {:index 0 :offset 0 :length 1}))))
   (is (= #{{:index 111 :offset 222 :length 333}} (:requested (peer/request-block {} {:index 111 :offset 222 :length 333})))))
