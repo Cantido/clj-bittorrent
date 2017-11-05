@@ -4,8 +4,34 @@
   (:require [clj-bencode.core :as b]
             [clojure.set :as s]
             [clj-bittorrent.binary :as bin]
-            [clj-bittorrent.hash :as hash]))
+            [clj-bittorrent.hash :as hash]
+            [schema.core :as schema]
+            [clj-bittorrent.numbers :as n]))
 
+(def SingleFileInfo
+  {:length n/Length
+   :md5sum schema/Str
+   :name schema/Str
+   :piece-length n/Length
+   :pieces [schema/Int]})
+
+(def FileInfo
+  {:length n/Length
+   :md5sum schema/Str
+   :path [schema/Str]})
+
+(def MultiFileInfo
+  {:name schema/Str
+   :piece-length n/Length
+   :pieces [schema/Int]})
+
+(def Metainfo
+  {:announce      schema/Str
+   :announce-list [schema/Str]
+   :created-by    schema/Str
+   :creation-date n/NonNegativeInt
+   :encoding      schema/Str
+   :info (schema/conditional map? SingleFileInfo :else MultiFileInfo)})
 
 (def ^:private metainfo-kmap
   {"announce" :announce

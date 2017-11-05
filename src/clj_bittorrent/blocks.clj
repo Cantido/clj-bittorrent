@@ -1,5 +1,19 @@
 (ns clj-bittorrent.blocks
-  (:require [clojure.set :as s]))
+  (:require [clojure.set :as s]
+            [schema.core :as schema]
+            [clj-bittorrent.numbers :as n]))
+
+(def BlockData
+  "A piece is made up of several blocks of binary data."
+  {:index n/Index
+   :offset n/Index
+   :contents [schema/Int]})
+
+(def BlockId
+  "A piece is made up of several blocks of binary data."
+  {:index n/Index
+   :offset n/Index
+   :length n/Length})
 
 (defn- keys=
   "Compare a's and b's value for key k."
@@ -52,12 +66,10 @@
   (s/difference (set xrel) (get (s/index xrel (keys m))
                                 m)))
 
-(defn- index? [x]
-  (not (neg? x)))
 
 (defn remove-blocks-matching-indices
   ([bs n]
-   {:pre [(index? n)]}
+   {:pre [(n/nonneg? n)]}
    (remove-matching bs {:index n}))
   ([bs n & ns]
    (reduce remove-blocks-matching-indices

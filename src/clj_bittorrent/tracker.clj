@@ -3,7 +3,38 @@
   (:require [clj-http.client :as client]
             [clj-bencode.core :as b]
             [clj-bittorrent.urlencode :as u]
-            [clj-bittorrent.binary :as bin]))
+            [clj-bittorrent.binary :as bin]
+            [clj-bittorrent.net :as net]
+            [clj-bittorrent.numbers :as n]
+            [schema.core :as schema]))
+
+(def IsCompact
+  (schema/constrained schema/Int #{0 1}))
+
+(def Event
+  (schema/enum "started" "stopped" "completed"))
+
+(def TrackerRequest
+  {:port     net/Port
+   :uploaded n/Count
+   :downloaded n/Count
+   :left n/Count
+   :compact IsCompact
+   :event Event
+   :ip schema/Str
+   :numwant n/Count})
+
+(def PeerResponse
+  {"peer id" schema/Str
+   "ip" schema/Str
+   "port" net/Port})
+
+(def TrackerResponse
+  {"failure reason" schema/Str
+   "interval" n/NonNegativeInt
+   "complete" n/Count
+   "incomplete" n/Count
+   "peers" [PeerResponse]})
 
 (defn- decode-peer-binary-entry [s]
   (let [[ip port] (split-at 4 s)]

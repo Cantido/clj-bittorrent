@@ -2,8 +2,17 @@
   "Manipulate peer maps."
   (:require [clj-bittorrent.binary :as bin]
             [clj-bittorrent.blocks :as blocks]
-            [clojure.set :as s])
+            [clojure.set :as s]
+            [schema.core :as schema]
+            [clj-bittorrent.numbers :as n])
   (:import (java.nio.charset StandardCharsets)))
+
+(def Peer
+  {:choked schema/Bool
+   :interested schema/Bool
+   :have #{n/Index}
+   :blocks #{blocks/BlockData}
+   :requested #{blocks/BlockId}})
 
 (def peer-default-state
   {:choked true

@@ -7,4 +7,5 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/test.check "0.9.0"]
                  [clj-bencode "4.0.0"]
-                 [clj-http "3.7.0"]])
+                 [clj-http "3.7.0"]
+                 [prismatic/schema "1.1.7"]])

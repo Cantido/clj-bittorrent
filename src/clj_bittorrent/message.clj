@@ -1,7 +1,11 @@
 (ns clj-bittorrent.message
   "Encode and decode messages between peers."
-  (:require [clj-bittorrent.binary :as bin]
-            [clojure.set :as sets]
+  (:require [clojure.set :as sets]
+            [schema.core :as schema]
+            [clj-bittorrent.binary :as bin]
+            [clj-bittorrent.blocks :as blocks]
+            [clj-bittorrent.net :as net]
+            [clj-bittorrent.numbers :as n]
             [clj-bittorrent.peer :as peer])
   (:import (java.nio.charset StandardCharsets)))
 
@@ -244,6 +248,51 @@
 (defmulti apply-msg
           "Act upon a message sent by a remote peer."
           apply-type)
+
+(def KeepAliveMessage
+  {:id (schema/eq :keep-alive)})
+
+(def ChokeMessage
+  {:id (schema/eq :choke)})
+
+(def UnchokeMessage
+  {:id (schema/eq :unchoke)})
+
+(def InterestedMessage
+  {:id (schema/eq :interested)})
+
+(def NotInterestedMessage
+  {:id (schema/eq :not-interested)})
+
+(def HaveMessage
+  {:id (schema/eq :have)
+   :index n/Index})
+
+(def BitfieldMessage
+  {:id (schema/eq :bitfield)
+   :indices #{n/Index}})
+
+(def RequestMessage
+  {:id (schema/eq :request)
+   :index n/Index
+   :offset n/Index
+   :length n/Length})
+
+(def PieceMessage
+  {:id (schema/eq :piece)
+   :index n/Index
+   :offset n/Index
+   :contents [schema/Int]})
+
+(def CancelMessage
+  {:id (schema/eq :cancel)
+   :index n/Index
+   :offset n/Index
+   :length n/Length})
+
+(def PortMessage
+  {:id (schema/eq :port)
+   :port net/Port})
 
 (defmethod apply-msg :keep-alive     [msg state] state)
 (defmethod apply-msg :choke          [msg state] (update-in state [:client] peer/choke))
