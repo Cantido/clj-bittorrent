@@ -40,9 +40,6 @@
 
 (defn- un-request-blocks
   ([peer index-or-block]
-   {:pre [(or (index? index-or-block)
-              (map? index-or-block))]
-    :post [(set? (:requested %))]}
    (let [index (if (number? index-or-block)
                  index-or-block
                  (:index index-or-block))]
@@ -52,9 +49,8 @@
   "Update the peer to say they have piece n. Also clears that piece from
    the set of requested blocks, since the peer has it already."
   ([peer n]
-   {:pre [(number? n) (map? peer)]
-    :post [(set? (:have %))
-           (contains? (:have %) n)]}
+   {:pre [(index? n)]
+    :post [(contains? (:have %) n)]}
    (-> peer
        (update :have #(conj (set %) n))
        (un-request-blocks n)))
