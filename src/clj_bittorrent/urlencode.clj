@@ -38,9 +38,9 @@
              (seq (str "%" (b/hexbyte (int b)))))]
     result))
 
-(defn urlencode
+(schema/defn urlencode :- schema/Str
   "Url-encodes a seq of bytes. Makes no assumptions about encoding of strings."
-  [s]
+  [s :- bin/ByteArray]
   (->>
     s
     (seq)
