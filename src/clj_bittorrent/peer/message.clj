@@ -3,11 +3,11 @@
   (:require [clojure.set :as sets]
             [schema.core :as schema]
             [clj-bittorrent.math.binary :as bin]
-            [clj-bittorrent.pieces.blocks :as blocks]
-            [clj-bittorrent.peer.connection :as c]
-            [clj-bittorrent.net.net :as net]
             [clj-bittorrent.math.numbers :as n]
-            [clj-bittorrent.peer.peer :as peer])
+            [clj-bittorrent.net.net :as net]
+            [clj-bittorrent.peer.connection :as c]
+            [clj-bittorrent.peer.peer :as peer]
+            [clj-bittorrent.pieces.blocks :as blocks])
   (:import (java.nio.charset StandardCharsets)))
 
 ;; Encoding a handshake message

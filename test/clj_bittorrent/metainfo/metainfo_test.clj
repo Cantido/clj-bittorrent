@@ -1,8 +1,8 @@
 (ns clj-bittorrent.metainfo.metainfo-test
   (:require [clojure.test :refer :all]
             [clojure.java.io :as io]
-            [clj-bittorrent.metainfo.metainfo :as m]
-            [clj-bittorrent.math.binary :as b])
+            [clj-bittorrent.math.binary :as b]
+            [clj-bittorrent.metainfo.metainfo :as m])
   (:import (java.io File)))
 
 (def metainfo-file ^File

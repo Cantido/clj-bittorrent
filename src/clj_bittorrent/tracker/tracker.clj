@@ -1,15 +1,15 @@
 (ns clj-bittorrent.tracker.tracker
   "Interact with tracker servers."
   (:require [clj-http.client :as client]
+            [clojure.set :as s]
             [schema.core :as schema]
             [clj-bencode.core :as b]
-            [clj-bittorrent.tracker.urlencode :as u]
             [clj-bittorrent.math.binary :as bin]
-            [clj-bittorrent.net.net :as net]
-            [clj-bittorrent.metainfo.metainfo :as metainfo]
             [clj-bittorrent.math.numbers :as n]
+            [clj-bittorrent.metainfo.metainfo :as metainfo]
+            [clj-bittorrent.net.net :as net]
             [clj-bittorrent.peer.peer :as peer]
-            [clojure.set :as s])
+            [clj-bittorrent.tracker.urlencode :as u])
   (:import (org.apache.http HttpRequest)))
 
 (def FailureReason

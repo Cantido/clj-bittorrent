@@ -1,9 +1,9 @@
 (ns clj-bittorrent.math.binary-test
   (:require [clojure.test :refer :all]
-            [clj-bittorrent.math.binary :as bin]
             [clojure.test.check.clojure-test :refer :all]
             [clojure.test.check.generators :as gen]
-            [clojure.test.check.properties :as prop]))
+            [clojure.test.check.properties :as prop]
+            [clj-bittorrent.math.binary :as bin]))
 
 (deftest sbyte?-test
   (is (= true (bin/sbyte? -128)))

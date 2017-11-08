@@ -1,9 +1,7 @@
 (ns clj-bittorrent.tracker.urlencode
   "Make url-encoded byte arrays."
-  (:require [clj-bittorrent.math.binary :as b]
-            [clj-bittorrent.math.binary :as bin]
-            [schema.core :as schema]))
-
+  (:require [schema.core :as schema]
+            [clj-bittorrent.math.binary :as bin]))
 
 (defn- char-range-integers [a b]
   {:pre [(< (int (char a)) (int (char b)))]}
@@ -35,7 +33,7 @@
         result
            (if (allowed-raw? ib)
              (list (char b))
-             (seq (str "%" (b/hexbyte (int b)))))]
+             (seq (str "%" (bin/hexbyte (int b)))))]
     result))
 
 (schema/defn urlencode :- schema/Str

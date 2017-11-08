@@ -1,19 +1,18 @@
 (ns clj-bittorrent.tracker.tracker-test
   (:require [clojure.test :refer :all]
-            [clj-bittorrent.tracker.tracker :as tracker]
-            [clojure.java.io :as io]
-            [clj-bittorrent.metainfo.metainfo :as m]
-            [clj-bittorrent.math.binary :as bin]
             [schema.test :as st]
             [schema.core :as schema]
-            [clj-bittorrent.metainfo.metainfo :as metainfo]
-            [clj-bittorrent.peer.peer :as peer])
+            [clojure.java.io :as io]
+            [clj-bittorrent.math.binary :as bin]
+            [clj-bittorrent.metainfo.metainfo :as m]
+            [clj-bittorrent.peer.peer :as peer]
+            [clj-bittorrent.tracker.tracker :as tracker])
   (:import (java.io File)
            (java.security MessageDigest)))
 
 (use-fixtures :once st/validate-schemas)
 
-(schema/def info-hash :- metainfo/InfoHash
+(schema/def info-hash :- m/InfoHash
   [18 52 86 120 -102 -68 -34 -15 35 69 103 -119 -85 -51 -17 18 52 86 120 -102])
 
 (schema/def peer-id :- peer/PeerId

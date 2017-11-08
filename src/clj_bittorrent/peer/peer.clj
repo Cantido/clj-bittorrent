@@ -1,12 +1,12 @@
 (ns clj-bittorrent.peer.peer
   "Manipulate peer maps."
-  (:require [clj-bittorrent.math.binary :as bin]
-            [clj-bittorrent.pieces.blocks :as blocks]
-            [clojure.set :as s]
+  (:require [clojure.set :as s]
             [schema.core :as schema]
+            [clj-bittorrent.math.binary :as bin]
+            [clj-bittorrent.math.hash :as hash]
             [clj-bittorrent.math.numbers :as n]
             [clj-bittorrent.net.net :as net]
-            [clj-bittorrent.math.hash :as hash])
+            [clj-bittorrent.pieces.blocks :as blocks])
   (:import (java.nio.charset StandardCharsets)))
 
 (def PeerId

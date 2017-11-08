@@ -3,9 +3,9 @@
   (:refer-clojure :exclude [read])
   (:require [clj-bencode.core :as b]
             [clojure.set :as s]
+            [schema.core :as schema]
             [clj-bittorrent.math.binary :as bin]
             [clj-bittorrent.math.hash :as hash]
-            [schema.core :as schema]
             [clj-bittorrent.math.numbers :as n]))
 
 (def InfoHash
