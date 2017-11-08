@@ -4,10 +4,13 @@
             [schema.core :as schema]
             [clj-bittorrent.binary :as bin]
             [clj-bittorrent.blocks :as blocks]
+            [clj-bittorrent.connection :as c]
             [clj-bittorrent.net :as net]
             [clj-bittorrent.numbers :as n]
             [clj-bittorrent.peer :as peer])
   (:import (java.nio.charset StandardCharsets)))
+
+;; Encoding a handshake message
 
 (def ^:private pstr
   "string identifier of the protocol."
@@ -38,6 +41,8 @@
       reserved
       info-hash
       peer-id)))
+
+;; Encoding messages
 
 (def msg-id
   {:keep-alive     nil
@@ -192,62 +197,7 @@
          [d e] (split-at k ws)]
      [a b c d e])))
 
-(defn- payload [xs]
-  (nth (split-message xs 4 1) 2))
-
-(defn- recv-have [xs]
-  {:id :have
-   :index (bin/int-from-bytes (payload xs))})
-
-(defn- recv-bitfield [xs]
-  {:id :bitfield
-   :indices (bin/bitfield-set (payload xs))})
-
-(defn- recv-request [xs]
-  (merge {:id :request}
-         (zipmap [:index :offset :length]
-                 (drop 2 (map bin/int-from-bytes
-                              (split-message xs 4 1 4 4))))))
-
-(defn- recv-cancel [xs]
-  (merge {:id :cancel}
-         (zipmap [:index :offset :length]
-                 (drop 2 (map bin/int-from-bytes
-                              (split-message xs 4 1 4 4))))))
-
-(defn- recv-piece [xs]
-  (let [[len id index begin block] (split-message xs 4 1 4 4)]
-    {:id :piece
-     :index (bin/int-from-bytes index)
-     :offset (bin/int-from-bytes begin)
-     :contents block}))
-
-(defn- recv-port [xs]
-  {:id :port :port (bin/int-from-bytes (payload xs))})
-
-(defn- recv-type [xs]
-  (get msg (get (vec xs) 4)))
-
-(defmulti recv recv-type)
-
-(defmethod recv :keep-alive     [x] {:id :keep-alive})
-(defmethod recv :choke          [x] {:id :choke})
-(defmethod recv :unchoke        [x] {:id :unchoke})
-(defmethod recv :interested     [x] {:id :interested})
-(defmethod recv :not-interested [x] {:id :not-interested})
-(defmethod recv :have           [x] (recv-have x))
-(defmethod recv :bitfield       [x] (recv-bitfield x))
-(defmethod recv :request        [x] (recv-request x))
-(defmethod recv :piece          [x] (recv-piece x))
-(defmethod recv :cancel         [x] (recv-cancel x))
-(defmethod recv :port           [x] (recv-port x))
-
-
-(defn apply-type [x & more] (:id x))
-
-(defmulti apply-msg
-          "Act upon a message sent by a remote peer."
-          apply-type)
+;;;; Decoding messages
 
 (def KeepAliveMessage
   {:id (schema/eq :keep-alive)})
@@ -294,14 +244,76 @@
   {:id (schema/eq :port)
    :port net/Port})
 
-(defmethod apply-msg :keep-alive     [msg state] state)
-(defmethod apply-msg :choke          [msg state] (update-in state [:client] peer/choke))
-(defmethod apply-msg :unchoke        [msg state] (update-in state [:client] peer/unchoke))
-(defmethod apply-msg :interested     [msg state] (update-in state [:peer] peer/interested))
-(defmethod apply-msg :not-interested [msg state] (update-in state [:peer] peer/not-interested))
-(defmethod apply-msg :have           [msg state] (update-in state [:peer] #(peer/has-piece % (:index msg))))
-(defmethod apply-msg :bitfield       [msg state] (update-in state [:peer] #(apply peer/has-piece % (:indices msg))))
-(defmethod apply-msg :request        [msg state] (update-in state [:peer] #(peer/request-block % (select-keys msg [:index :offset :length]))))
-(defmethod apply-msg :piece          [msg state] (update-in state [:client] #(peer/add-block % (select-keys msg [:index :offset :contents]))))
-(defmethod apply-msg :cancel         [msg state] (update-in state [:peer :requested] #(disj % (select-keys msg [:index :offset :length]))))
-(defmethod apply-msg :port           [msg state] (assoc-in state [:peer :port] (:port msg)))
+
+(defn- payload [xs]
+  (nth (split-message xs 4 1) 2))
+
+(defn- recv-have [xs]
+  {:id :have
+   :index (bin/int-from-bytes (payload xs))})
+
+(defn- recv-bitfield [xs]
+  {:id :bitfield
+   :indices (bin/bitfield-set (payload xs))})
+
+(defn- recv-request [xs]
+  (merge {:id :request}
+         (zipmap [:index :offset :length]
+                 (drop 2 (map bin/int-from-bytes
+                              (split-message xs 4 1 4 4))))))
+
+(defn- recv-cancel [xs]
+  (merge {:id :cancel}
+         (zipmap [:index :offset :length]
+                 (drop 2 (map bin/int-from-bytes
+                              (split-message xs 4 1 4 4))))))
+
+(defn- recv-piece [xs]
+  (let [[len id index begin block] (split-message xs 4 1 4 4)]
+    {:id :piece
+     :index (bin/int-from-bytes index)
+     :offset (bin/int-from-bytes begin)
+     :contents block}))
+
+(defn- recv-port [xs]
+  {:id :port :port (bin/int-from-bytes (payload xs))})
+
+(defn- recv-type [xs]
+  (get msg (get (vec xs) 4)))
+
+(defmulti recv recv-type)
+
+(declare x)
+
+(schema/defmethod recv :keep-alive     :- KeepAliveMessage     [x] {:id :keep-alive})
+(schema/defmethod recv :choke          :- ChokeMessage         [x] {:id :choke})
+(schema/defmethod recv :unchoke        :- UnchokeMessage       [x] {:id :unchoke})
+(schema/defmethod recv :interested     :- InterestedMessage    [x] {:id :interested})
+(schema/defmethod recv :not-interested :- NotInterestedMessage [x] {:id :not-interested})
+(schema/defmethod recv :have           :- HaveMessage          [x] (recv-have x))
+(schema/defmethod recv :bitfield       :- BitfieldMessage      [x] (recv-bitfield x))
+(schema/defmethod recv :request        :- RequestMessage       [x] (recv-request x))
+(schema/defmethod recv :piece          :- PieceMessage         [x] (recv-piece x))
+(schema/defmethod recv :cancel         :- CancelMessage        [x] (recv-cancel x))
+(schema/defmethod recv :port           :- PortMessage          [x] (recv-port x))
+
+
+(defn apply-type [x & more] (:id x))
+
+(defmulti apply-msg
+          "Act upon a message sent by a remote peer."
+          apply-type)
+
+(declare msg state)
+
+(schema/defmethod apply-msg :keep-alive     :- c/Connection [msg :- KeepAliveMessage     state :- c/Connection] state)
+(schema/defmethod apply-msg :choke          :- c/Connection [msg :- ChokeMessage         state :- c/Connection] (update-in state [:client] peer/choke))
+(schema/defmethod apply-msg :unchoke        :- c/Connection [msg :- UnchokeMessage       state :- c/Connection] (update-in state [:client] peer/unchoke))
+(schema/defmethod apply-msg :interested     :- c/Connection [msg :- InterestedMessage    state :- c/Connection] (update-in state [:peer] peer/interested))
+(schema/defmethod apply-msg :not-interested :- c/Connection [msg :- NotInterestedMessage state :- c/Connection] (update-in state [:peer] peer/not-interested))
+(schema/defmethod apply-msg :have           :- c/Connection [msg :- HaveMessage          state :- c/Connection] (update-in state [:peer] #(peer/has-piece % (:index msg))))
+(schema/defmethod apply-msg :bitfield       :- c/Connection [msg :- BitfieldMessage      state :- c/Connection] (update-in state [:peer] #(apply peer/has-piece % (:indices msg))))
+(schema/defmethod apply-msg :request        :- c/Connection [msg :- RequestMessage       state :- c/Connection] (update-in state [:peer] #(peer/request-block % (select-keys msg [:index :offset :length]))))
+(schema/defmethod apply-msg :piece          :- c/Connection [msg :- PieceMessage         state :- c/Connection] (update-in state [:client] #(peer/add-block % (select-keys msg [:index :offset :contents]))))
+(schema/defmethod apply-msg :cancel         :- c/Connection [msg :- CancelMessage        state :- c/Connection] (update-in state [:peer :requested] #(disj % (select-keys msg [:index :offset :length]))))
+(schema/defmethod apply-msg :port           :- c/Connection [msg :- PortMessage          state :- c/Connection] (assoc-in state [:peer :port] (:port msg)))

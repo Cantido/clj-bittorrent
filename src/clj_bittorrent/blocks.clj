@@ -8,7 +8,7 @@
   "A piece is made up of several blocks of binary data."
   {:index    n/Index
    :offset   n/Index
-   :contents [bin/SignedByte]})
+   :contents bin/ByteArray})
 
 (def BlockId
   "A piece is made up of several blocks of binary data."

@@ -3,15 +3,21 @@
             [clj-bittorrent.tracker :as tracker]
             [clojure.java.io :as io]
             [clj-bittorrent.metainfo :as m]
-            [clj-bittorrent.binary :as bin])
+            [clj-bittorrent.binary :as bin]
+            [schema.test :as st]
+            [schema.core :as schema]
+            [clj-bittorrent.metainfo :as metainfo]
+            [clj-bittorrent.peer :as peer])
   (:import (java.io File)
            (java.security MessageDigest)))
 
-(def info-hash
-  [0x12 0x34 0x56 0x78 0x9a
-   0xbc 0xde 0xf1 0x23 0x45
-   0x67 0x89 0xab 0xcd 0xef
-   0x12 0x34 0x56 0x78 0x9a])
+(use-fixtures :once st/validate-schemas)
+
+(schema/def info-hash :- metainfo/InfoHash
+  [18 52 86 120 -102 -68 -34 -15 35 69 103 -119 -85 -51 -17 18 52 86 120 -102])
+
+(schema/def peer-id :- peer/PeerId
+  [18 52 86 120 -102 -68 -34 -15 35 69 103 -119 -85 -51 -17 18 52 86 120 -102])
 
 (def expected-urlencoded-info-hash
   (str "%124Vx%9A"
@@ -35,9 +41,9 @@
     (is (= [{:ip "48.178.7.154" :port 8193}] result))
     (is (= {:ip "48.178.7.154" :port 8193} (first result)))))
 
-(def example-request
+(schema/def example-request :- tracker/TrackerRequest
   {:info-hash info-hash
-   :peer-id info-hash
+   :peer-id peer-id
    :port 6881
    :uploaded 1000
    :downloaded 1000
@@ -51,7 +57,6 @@
   (concat
     "d"
     "8:complete" "i0e"
-    "10:downloaded" "i0e"
     "10:incomplete" "i1e"
     "8:interval" "i1850e"
     "12:min interval" "i925e"
@@ -100,13 +105,19 @@
 ;(deftest integration-test
 ;  (is (= {} (tracker/announce "http://localhost:6969/announce" example-request))))
 
+(deftest schema-test
+  (is (= nil (schema/check tracker/Interval 1000)))
+  (is (= nil (schema/check tracker/CompleteCount 1000)))
+  (is (= nil (schema/check tracker/IncompleteCount 1000)))
+  (is (= nil (schema/check tracker/Event "started")))
+  (is (= nil (schema/check tracker/Event "stopped")))
+  (is (= nil (schema/check tracker/Event "completed"))))
+
 (deftest tracker-response-test
   (let [result (#'tracker/tracker-response example-response)]
     (is (not= true (nil? result)))
-    (is (= 0 (get result "complete")))
-    (is (= 0 (get result "downloaded")))
-    (is (= 1 (get result "incomplete")))
-    (is (= 1850 (get result "interval")))
-    (is (= 925 (get result "min interval")))
+    (is (= 0 (get result :complete)))
+    (is (= 1 (get result :incomplete)))
+    (is (= 1850 (get result :interval)))
     (is (= (list {:ip "192.168.1.100" :port 6881})
-           (get result "peers")))))
+           (get result :peers)))))

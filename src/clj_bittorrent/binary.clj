@@ -50,6 +50,7 @@
 
 (def SignedByte (schema/constrained schema/Int sbyte?))
 (def UnsignedByte (schema/constrained schema/Int ubyte?))
+(def ByteArray (schema/pred (partial every? sbyte?)))
 
 (defn ubyte
   "converts a signed byte to an unsigned byte.
@@ -68,16 +69,6 @@
 
 (defn int-from-bytes [xs]
   (BigInteger. (byte-array (seq xs))))
-
-(defn rand-ubyte
-  ^Integer []
-  {:post [(ubyte? %)]}
-  (rand-int 256))
-
-(defn rand-sbyte
-  ^Byte []
-  {:post [(sbyte? %)]}
-  (sbyte (rand-ubyte)))
 
 (defn hexbyte
   ^String [b]

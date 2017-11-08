@@ -15,3 +15,7 @@
 (def IpAddress
   "An IPv4 or IPv6 address."
   schema/Str)
+
+(def Url
+  "A URL"
+  schema/Str)

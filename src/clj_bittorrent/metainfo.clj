@@ -8,13 +8,18 @@
             [schema.core :as schema]
             [clj-bittorrent.numbers :as n]))
 
+(def InfoHash
+  "An identifier for a torrent, calculated by taking the SHA-1 hash of the
+   value in the \"info\" key of a metainfo file."
+  hash/Sha1Hash)
+
 (def SingleFileInfo
   "Describes a file in a single-file torrent metainfo file."
   {:length n/Length
    :md5sum schema/Str
    :name schema/Str
    :piece-length n/Length
-   :pieces [schema/Int]})
+   :pieces bin/ByteArray})
 
 (def FileInfo
   "Describes a single file in a multi-file metainfo file."
@@ -26,7 +31,7 @@
   "Describes all files contained in a multi-file metainfo file.."
   {:name schema/Str
    :piece-length n/Length
-   :pieces [schema/Int]})
+   :pieces bin/ByteArray})
 
 (def Metainfo
   "Describes a single file or multiple files that can be downloaded from peers

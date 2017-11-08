@@ -1,13 +1,16 @@
 (ns clj-bittorrent.tracker
   "Interact with tracker servers."
   (:require [clj-http.client :as client]
+            [schema.core :as schema]
             [clj-bencode.core :as b]
             [clj-bittorrent.urlencode :as u]
             [clj-bittorrent.binary :as bin]
             [clj-bittorrent.net :as net]
+            [clj-bittorrent.metainfo :as metainfo]
             [clj-bittorrent.numbers :as n]
-            [schema.core :as schema]
-            [clj-bittorrent.peer :as peer]))
+            [clj-bittorrent.peer :as peer]
+            [clojure.set :as s])
+  (:import (org.apache.http HttpRequest)))
 
 (def FailureReason
   "A human-readable string containing an error message with the reason that
@@ -24,7 +27,8 @@
   n/Count)
 
 (def IncompleteCount
-  "The number of online peers downloading the torrent.")
+  "The number of online peers downloading the torrent."
+  n/Count)
 
 (def IsCompact
   "If the client wants the peers list to be compressed into six-byte
@@ -38,7 +42,9 @@
 (def TrackerRequest
   "A request sent by a peer to get peers from a tracker, and to inform the
    tracker of its download status."
-  {:port     net/Port
+  {:info-hash metainfo/InfoHash
+   :peer-id peer/PeerId
+   :port     net/Port
    :uploaded n/Count
    :downloaded n/Count
    :left n/Count
@@ -49,26 +55,62 @@
 
 (def PeerResponse
   "One peer that can be contacted to download a file."
-  {"peer id" peer/PeerId
-   "ip"      net/IpAddress
-   "port"    net/Port})
+   {:ip       net/IpAddress
+    :port     net/Port
+    (schema/optional-key :peer-id) peer/PeerId})
+
+(def CompactPeer
+  "A peer response when Compact is set to 1"
+  (schema/constrained bin/ByteArray #(= 6 (count %))))
+
+(def CompactPeers
+  "A collection of peer responses when Compact is set to 1"
+  (schema/constrained bin/ByteArray #(n/multiple-of? (count %) 6)))
+
+(def TrackerFailedResponse
+  "The response when a request to join a swarm has failed."
+  {:failure-reason FailureReason})
+
+(def TrackerSuccessResponse
+  "The response when a request to join a swarm has is successful."
+  {:interval   Interval
+   (schema/optional-key :min-interval) Interval
+   :complete   CompleteCount
+   :incomplete IncompleteCount
+   :peers      [PeerResponse]})
 
 (def TrackerResponse
   "The overall state of a BitTorrent network's download, including peers to
-   contact to download it yourself."
-  {"failure reason" FailureReason
-   "interval" Interval
-   "complete" CompleteCount
-   "incomplete" IncompleteCount
-   "peers" [PeerResponse]})
+   contact to download it yourself. Could be an error message if there was a failure."
+  (schema/conditional
+    #(some? (get % :failure-reason)) TrackerFailedResponse
+    :else TrackerSuccessResponse))
 
-(defn- decode-peer-binary-entry [s]
+(def HttpRequestMap
+  "The map required by clj-http to make a request"
+  schema/Any)
+
+(def HttpResponseMap
+  "The map returned by clj-http"
+  schema/Any)
+
+(def response-kmap
+  {"failure reason" :failure-reason
+   "complete" :complete
+   "downloaded" :downloaded
+   "incomplete" :incomplete
+   "interval" :interval
+   "min interval" :min-interval
+   "peers" :peers})
+
+(schema/defn decode-peer-binary-entry :- PeerResponse
+  [s :- CompactPeer]
   (let [[ip port] (split-at 4 s)]
     {:ip (bin/ipv4-address (seq (map bin/ubyte ip)))
      :port (BigInteger. (byte-array (seq port)))}))
 
-(defn- decode-peers-binary
-  [s]
+(schema/defn decode-peers-binary :- [PeerResponse]
+  [s :- CompactPeers]
   {:post [(every? map? %)
           (every? some? (map :ip %))
           (every? some? (map :port %))]}
@@ -77,18 +119,20 @@
        (partition 6)
        (map decode-peer-binary-entry)))
 
-(defn- tracker-response
-  [m]
+(schema/defn tracker-response :- TrackerResponse
+  [m :- HttpResponseMap]
   {:pre [(some? m)]}
   (-> m
     (:body)
     (byte-array)
     (b/decode)
-    (update-in ["peers"] decode-peers-binary)))
+    (s/rename-keys response-kmap)
+    (update :peers decode-peers-binary)))
 
-(defn- tracker-request
+(schema/defn tracker-request :- HttpRequestMap
   "Create an HTTP request map from the info in map m."
-  [url m]
+  [url :- net/Url
+   m :- TrackerRequest]
   ;; clj-http will url-encode our query params for us,
   ;; but it encodes UTF-16, which trackers like opentracker
   ;; don't like. They expect UTF-8.
@@ -105,9 +149,10 @@
                                  :ip
                                  :numwant])})
 
-(defn announce
+(schema/defn announce :- TrackerResponse
   "Announce yourself to the tracker for torrent map m."
-  [url m]
+  [url :- net/Url
+   m :- TrackerRequest]
   {:pre [(some? m)
          (= 20 (count (:info-hash m)))]}
   (->> m

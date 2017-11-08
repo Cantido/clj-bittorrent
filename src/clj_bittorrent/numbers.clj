@@ -4,6 +4,9 @@
 (defn nonneg? [x]
   (not (neg? x)))
 
+(defn multiple-of? [x y]
+  (= 0 (rem x y)))
+
 (def NonNegativeInt
   "A number zero or greater."
   (schema/constrained schema/Int nonneg?))

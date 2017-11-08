@@ -1,7 +1,10 @@
 (ns clj-bittorrent.message-test
   (:require [clojure.test :refer :all]
             [clj-bittorrent.message :as msg]
-            [clj-bittorrent.connection :as conn]))
+            [clj-bittorrent.connection :as conn]
+            [schema.test :as st]))
+
+(use-fixtures :once st/validate-schemas)
 
 (def expected-pstrlen [0x13])
 
@@ -95,7 +98,7 @@
 (def peer-with-port (assoc-in conn/connection-default-state [:peer :port] 6881))
 
 (deftest apply-msg-test
-  (is (= {} (msg/apply-msg {:id :keep-alive} {})))
+  (is (= conn/connection-default-state (msg/apply-msg {:id :keep-alive} conn/connection-default-state)))
   (is (= choked-client (msg/apply-msg {:id :choke} unchoked-client)))
   (is (= choked-client (msg/apply-msg {:id :choke} choked-client)))
   (is (= unchoked-client (msg/apply-msg {:id :unchoke} choked-client)))

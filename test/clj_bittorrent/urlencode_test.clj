@@ -8,10 +8,7 @@
 
 
 (def info-hash
-  [0x12 0x34 0x56 0x78 0x9a
-   0xbc 0xde 0xf1 0x23 0x45
-   0x67 0x89 0xab 0xcd 0xef
-   0x12 0x34 0x56 0x78 0x9a])
+  [18 52 86 120 -102 -68 -34 -15 35 69 103 -119 -85 -51 -17 18 52 86 120 -102])
 
 (def expected-urlencoded-info-hash
   (str "%124Vx%9A"
@@ -20,19 +17,19 @@
        "%124Vx%9A"))
 
 (deftest urlencode-test
-  (is (= "%12" (u/urlencode [0x12])))
-  (is (= "4" (u/urlencode [0x34])))
-  (is (= "V" (u/urlencode [0x56])))
-  (is (= "x" (u/urlencode [0x78])))
-  (is (= "%9A" (u/urlencode [0x9a])))
-  (is (= "%00" (u/urlencode [0x00])))
+  (is (= "%12" (u/urlencode [18])))
+  (is (= "4" (u/urlencode [52])))
+  (is (= "V" (u/urlencode [86])))
+  (is (= "x" (u/urlencode [120])))
+  (is (= "%9A" (u/urlencode [-102])))
+  (is (= "%00" (u/urlencode [0])))
   (is (= expected-urlencoded-info-hash (u/urlencode info-hash))))
 
 (declare encoded-spec x)
 
 (defspec encoded-spec
   (prop/for-all [x gen/byte]
-    (let [encoded (u/urlencode [(b/ubyte x)])
+    (let [encoded (u/urlencode [x])
           enc-length (count encoded)]
       (or (and (= 1 enc-length)
                (Character/isDefined (char (first (seq encoded)))))

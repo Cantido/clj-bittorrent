@@ -4,12 +4,14 @@
             [clj-bittorrent.blocks :as blocks]
             [clojure.set :as s]
             [schema.core :as schema]
-            [clj-bittorrent.numbers :as n])
+            [clj-bittorrent.numbers :as n]
+            [clj-bittorrent.net :as net]
+            [clj-bittorrent.hash :as hash])
   (:import (java.nio.charset StandardCharsets)))
 
 (def PeerId
   "A unique identifier for a peer."
-  (schema/constrained [bin/SignedByte] #(= 20 (count %))))
+  hash/Sha1Hash)
 
 (def Choked
   "A choked peer is not allowed to request data."
@@ -33,11 +35,12 @@
 
 (def Peer
   "A peer is trying to download or upload pieces of a file."
-  {:choked     Choked
-   :interested Interested
-   :have       HasPieces
-   :blocks     HasBlocks
-   :requested  RequestedBlocks})
+  {:choked                     Choked
+   :interested                 Interested
+   :have                       HasPieces
+   :blocks                     HasBlocks
+   :requested                  RequestedBlocks
+   (schema/optional-key :port) net/Port})
 
 (schema/def peer-default-state :- Peer
   {:choked true

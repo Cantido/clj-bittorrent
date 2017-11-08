@@ -1,7 +1,8 @@
 (ns clj-bittorrent.urlencode
   "Make url-encoded byte arrays."
   (:require [clj-bittorrent.binary :as b]
-            [clj-bittorrent.binary :as bin]))
+            [clj-bittorrent.binary :as bin]
+            [schema.core :as schema]))
 
 
 (defn- char-range-integers [a b]
@@ -25,10 +26,11 @@
     (alpha (int b))
     (punct (int b))))
 
-(defn- urlencode-byte [b]
-  {:pre [(b/ubyte? b)]
-   :post [(#{1 3} (count (seq %)))
-          (seq? %)]}
+(def UrlEncodedByte
+  (schema/constrained [Character] #(#{1 3} (count (seq %)))))
+
+(schema/defn urlencode-byte :- UrlEncodedByte
+  [b :- bin/UnsignedByte]
   (let [ib (int b)
         result
            (if (allowed-raw? ib)
@@ -37,12 +39,11 @@
     result))
 
 (defn urlencode
-  "Url-encodes a seq of bytes. The bytes are assumed to be unsigned.
-   Makes no assumptions about encoding of strings."
+  "Url-encodes a seq of bytes. Makes no assumptions about encoding of strings."
   [s]
   (->>
     s
     (seq)
-    (map int)
+    (map bin/ubyte)
     (mapcat urlencode-byte)
     (apply str)))
