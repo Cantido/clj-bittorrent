@@ -5,7 +5,7 @@
   (not (neg? x)))
 
 (defn multiple-of? [x y]
-  (= 0 (rem x y)))
+  (zero? (rem x y)))
 
 (def NonNegativeInt
   "A number zero or greater."

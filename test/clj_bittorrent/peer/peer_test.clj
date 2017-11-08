@@ -24,8 +24,10 @@
   (is (= true (:interested (peer/interested (peer-with :interested true))))))
 
 (deftest not-interested-test
-  (is (= false (:interested (peer/not-interested (peer-with :interested false)))))
-  (is (= false (:interested (peer/not-interested (peer-with :interested true))))))
+  (is (= false (:interested (peer/not-interested
+                              (peer-with :interested false)))))
+  (is (= false (:interested (peer/not-interested
+                              (peer-with :interested true))))))
 
 (deftest has-piece-test
   (is (= #{666} (:have (peer/has-piece (peer-with :have #{}) 666))))
@@ -70,8 +72,10 @@
 
 (deftest request-test
   (is (= #{{:index 0 :offset 0 :length 1}}
-         (:requested (peer/request-block peer/peer-default-state
-                                         {:index 0 :offset 0 :length 1}))))
+         (:requested (peer/request-block
+                       peer/peer-default-state
+                       {:index 0 :offset 0 :length 1}))))
   (is (= #{{:index 111 :offset 222 :length 333}}
-         (:requested (peer/request-block peer/peer-default-state
-                                         {:index 111 :offset 222 :length 333})))))
+         (:requested (peer/request-block
+                       peer/peer-default-state
+                       {:index 111 :offset 222 :length 333})))))

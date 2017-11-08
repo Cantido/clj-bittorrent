@@ -80,8 +80,9 @@
    :peers      [PeerResponse]})
 
 (def TrackerResponse
-  "The overall state of a BitTorrent network's download, including peers to
-   contact to download it yourself. Could be an error message if there was a failure."
+  "The overall state of a BitTorrent network's download, including
+  peers to contact to download it yourself. Could be an error message
+  if there was a failure."
   (schema/conditional
     #(some? (get % :failure-reason)) TrackerFailedResponse
     :else TrackerSuccessResponse))
@@ -159,4 +160,3 @@
     (tracker-request url)
     (client/request)
     (tracker-response)))
-

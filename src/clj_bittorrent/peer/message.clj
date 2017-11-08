@@ -143,7 +143,8 @@
   {:pre [(bin/sint? index)
          (bin/sint? begin)
          (bin/sint? (+ 9 (count block)))]
-   :post [(= (+ 13 (count block) (count %)))]}
+   :post [(= (+ 13 (count block))
+             (count %))]}
   (concat
     (bin/int-byte-field 4 (+ 9 (count block)))
     [(:piece msg-id)]
@@ -174,7 +175,7 @@
    peer's DHT node is listening on. This peer should be inserted in the local
    routing table (if DHT tracker is supported)."
   [port]
-  {:pre [(bin/fits-in-bytes-unsigned 2 port)]
+  {:pre  [(bin/fits-in-bytes-unsigned? 2 port)]
    :post [(= 7 (count %))]}
   (concat [0x00 0x00 0x00 0x03]
           [(:port msg-id)]
@@ -285,18 +286,38 @@
 
 (declare x)
 
-(schema/defmethod recv :keep-alive     :- KeepAliveMessage     [x] {:id :keep-alive})
-(schema/defmethod recv :choke          :- ChokeMessage         [x] {:id :choke})
-(schema/defmethod recv :unchoke        :- UnchokeMessage       [x] {:id :unchoke})
-(schema/defmethod recv :interested     :- InterestedMessage    [x] {:id :interested})
-(schema/defmethod recv :not-interested :- NotInterestedMessage [x] {:id :not-interested})
-(schema/defmethod recv :have           :- HaveMessage          [x] (recv-have x))
-(schema/defmethod recv :bitfield       :- BitfieldMessage      [x] (recv-bitfield x))
-(schema/defmethod recv :request        :- RequestMessage       [x] (recv-request x))
-(schema/defmethod recv :piece          :- PieceMessage         [x] (recv-piece x))
-(schema/defmethod recv :cancel         :- CancelMessage        [x] (recv-cancel x))
-(schema/defmethod recv :port           :- PortMessage          [x] (recv-port x))
+(schema/defmethod recv :keep-alive :- KeepAliveMessage
+                  [x] {:id :keep-alive})
 
+(schema/defmethod recv :choke :- ChokeMessage
+                  [x] {:id :choke})
+
+(schema/defmethod recv :unchoke :- UnchokeMessage
+                  [x] {:id :unchoke})
+
+(schema/defmethod recv :interested :- InterestedMessage
+                  [x] {:id :interested})
+
+(schema/defmethod recv :not-interested :- NotInterestedMessage
+                  [x] {:id :not-interested})
+
+(schema/defmethod recv :have :- HaveMessage
+                  [x] (recv-have x))
+
+(schema/defmethod recv :bitfield :- BitfieldMessage
+                  [x] (recv-bitfield x))
+
+(schema/defmethod recv :request :- RequestMessage
+                  [x] (recv-request x))
+
+(schema/defmethod recv :piece :- PieceMessage
+                  [x] (recv-piece x))
+
+(schema/defmethod recv :cancel :- CancelMessage
+                  [x] (recv-cancel x))
+
+(schema/defmethod recv :port :- PortMessage
+                  [x] (recv-port x))
 
 (defn apply-type [x & more] (:id x))
 
@@ -306,14 +327,62 @@
 
 (declare msg state)
 
-(schema/defmethod apply-msg :keep-alive     :- c/Connection [msg :- KeepAliveMessage     state :- c/Connection] state)
-(schema/defmethod apply-msg :choke          :- c/Connection [msg :- ChokeMessage         state :- c/Connection] (update-in state [:client] peer/choke))
-(schema/defmethod apply-msg :unchoke        :- c/Connection [msg :- UnchokeMessage       state :- c/Connection] (update-in state [:client] peer/unchoke))
-(schema/defmethod apply-msg :interested     :- c/Connection [msg :- InterestedMessage    state :- c/Connection] (update-in state [:peer] peer/interested))
-(schema/defmethod apply-msg :not-interested :- c/Connection [msg :- NotInterestedMessage state :- c/Connection] (update-in state [:peer] peer/not-interested))
-(schema/defmethod apply-msg :have           :- c/Connection [msg :- HaveMessage          state :- c/Connection] (update-in state [:peer] #(peer/has-piece % (:index msg))))
-(schema/defmethod apply-msg :bitfield       :- c/Connection [msg :- BitfieldMessage      state :- c/Connection] (update-in state [:peer] #(apply peer/has-piece % (:indices msg))))
-(schema/defmethod apply-msg :request        :- c/Connection [msg :- RequestMessage       state :- c/Connection] (update-in state [:peer] #(peer/request-block % (select-keys msg [:index :offset :length]))))
-(schema/defmethod apply-msg :piece          :- c/Connection [msg :- PieceMessage         state :- c/Connection] (update-in state [:client] #(peer/add-block % (select-keys msg [:index :offset :contents]))))
-(schema/defmethod apply-msg :cancel         :- c/Connection [msg :- CancelMessage        state :- c/Connection] (update-in state [:peer :requested] #(disj % (select-keys msg [:index :offset :length]))))
-(schema/defmethod apply-msg :port           :- c/Connection [msg :- PortMessage          state :- c/Connection] (assoc-in state [:peer :port] (:port msg)))
+(schema/defmethod apply-msg :keep-alive :- c/Connection
+                  [msg :- KeepAliveMessage state :- c/Connection]
+                  state)
+
+(schema/defmethod apply-msg :choke :- c/Connection
+                  [msg :- ChokeMessage state :- c/Connection]
+                  (update-in state [:client] peer/choke))
+
+(schema/defmethod apply-msg :unchoke :- c/Connection
+                  [msg :- UnchokeMessage state :- c/Connection]
+                  (update-in state [:client] peer/unchoke))
+
+(schema/defmethod apply-msg :interested :- c/Connection
+                  [msg :- InterestedMessage state :- c/Connection]
+                  (update-in state [:peer] peer/interested))
+
+(schema/defmethod apply-msg :not-interested :- c/Connection
+                  [msg :- NotInterestedMessage state :- c/Connection]
+                  (update-in state [:peer] peer/not-interested))
+
+(schema/defmethod apply-msg :have :- c/Connection
+                  [msg :- HaveMessage state :- c/Connection]
+                  (update-in state [:peer] #(peer/has-piece % (:index msg))))
+
+(schema/defmethod apply-msg :bitfield :- c/Connection
+                  [msg :- BitfieldMessage state :- c/Connection]
+                  (update-in
+                    state
+                    [:peer]
+                    #(apply peer/has-piece % (:indices msg))))
+
+(schema/defmethod apply-msg :request :- c/Connection
+                  [msg :- RequestMessage state :- c/Connection]
+                  (update-in
+                    state
+                    [:peer]
+                    #(peer/request-block
+                       %
+                       (select-keys msg [:index :offset :length]))))
+
+(schema/defmethod apply-msg :piece :- c/Connection
+                  [msg :- PieceMessage state :- c/Connection]
+                  (update-in
+                    state
+                    [:client]
+                    #(peer/add-block
+                       %
+                       (select-keys msg [:index :offset :contents]))))
+
+(schema/defmethod apply-msg :cancel :- c/Connection
+                  [msg :- CancelMessage state :- c/Connection]
+                  (update-in
+                    state
+                    [:peer :requested]
+                    #(disj % (select-keys msg [:index :offset :length]))))
+
+(schema/defmethod apply-msg :port :- c/Connection
+                  [msg :- PortMessage state :- c/Connection]
+                  (assoc-in state [:peer :port] (:port msg)))

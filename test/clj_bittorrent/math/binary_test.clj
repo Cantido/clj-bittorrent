@@ -25,14 +25,29 @@
   (is (= -17 (bin/sbyte 239))))
 
 (deftest bitfield-set-test
-  (is (= #{} (bin/bitfield-set (byte-array [0]))))
-  (is (= #{0} (bin/bitfield-set (byte-array [0x80]))))
-  (is (= #{7} (bin/bitfield-set (byte-array [0x01]))))
-  (is (= #{1} (bin/bitfield-set (byte-array [0x40]))))
-  (is (= #{31} (bin/bitfield-set (byte-array [0x00 0x00 0x00 0x01]))))
-  (is (= #{28 29 30 31} (bin/bitfield-set (byte-array [0x00 0x00 0x00 0x0F]))))
-  (is (= #{1 2 3} (bin/bitfield-set (byte-array [0x70 0x00 0x00 0x00]))))
-  (is (= (set (range 32)) (bin/bitfield-set (byte-array [0xFF 0xFF 0xFF 0xFF])))))
+  (is (= #{}
+         (bin/bitfield-set (byte-array [0]))))
+
+  (is (= #{0}
+         (bin/bitfield-set (byte-array [0x80]))))
+
+  (is (= #{7}
+         (bin/bitfield-set (byte-array [0x01]))))
+
+  (is (= #{1}
+         (bin/bitfield-set (byte-array [0x40]))))
+
+  (is (= #{31}
+         (bin/bitfield-set (byte-array [0x00 0x00 0x00 0x01]))))
+
+  (is (= #{28 29 30 31}
+         (bin/bitfield-set (byte-array [0x00 0x00 0x00 0x0F]))))
+
+  (is (= #{1 2 3}
+         (bin/bitfield-set (byte-array [0x70 0x00 0x00 0x00]))))
+
+  (is (= (set (range 32))
+         (bin/bitfield-set (byte-array [0xFF 0xFF 0xFF 0xFF])))))
 
 
 (deftest ipv4-address-test

@@ -73,10 +73,10 @@
   ([bs n]
    {:pre [(n/nonneg? n)]}
    (remove-matching bs {:index n}))
-  ([bs n & ns]
+  ([bs n & more]
    (reduce remove-blocks-matching-indices
            (remove-blocks-matching-indices bs n)
-           ns)))
+           more)))
 
 (defn conj-condense
   "Adds x to the set s, condensing it into another block if possible."

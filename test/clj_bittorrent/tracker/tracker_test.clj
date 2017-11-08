@@ -102,7 +102,9 @@
 ;; Uncomment & use this test if you want to hit a
 ;; real tracker server running locally.
 ;(deftest integration-test
-;  (is (= {} (tracker/announce "http://localhost:6969/announce" example-request))))
+;  (is (= {} (tracker/announce
+;              "http://localhost:6969/announce"
+;              example-request))))
 
 (deftest schema-test
   (is (= nil (schema/check tracker/Interval 1000)))
