@@ -1,4 +1,4 @@
-(ns clj-bittorrent.binary
+(ns clj-bittorrent.math.binary
   "Byte-manipulation functions."
   (:require [clojure.string :as string]
             [schema.core :as schema]))

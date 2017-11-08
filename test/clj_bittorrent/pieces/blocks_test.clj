@@ -1,6 +1,6 @@
-(ns clj-bittorrent.blocks-test
+(ns clj-bittorrent.pieces.blocks-test
   (:require [clojure.test :refer :all]
-            [clj-bittorrent.blocks :as blocks]))
+            [clj-bittorrent.pieces.blocks :as blocks]))
 
 (deftest remove-blocks-matching-indices-test
   (is (= #{}

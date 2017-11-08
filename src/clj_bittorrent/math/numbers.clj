@@ -1,4 +1,4 @@
-(ns clj-bittorrent.numbers
+(ns clj-bittorrent.math.numbers
   (:require [schema.core :as schema]))
 
 (defn nonneg? [x]

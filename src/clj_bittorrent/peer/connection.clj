@@ -1,6 +1,6 @@
-(ns clj-bittorrent.connection
+(ns clj-bittorrent.peer.connection
   "Manipulate client-peer connection maps."
-  (:require [clj-bittorrent.peer :as peer]))
+  (:require [clj-bittorrent.peer.peer :as peer]))
 
 (def Connection
   "A connection between the local peer (AKA \"client\") and a remote peer."

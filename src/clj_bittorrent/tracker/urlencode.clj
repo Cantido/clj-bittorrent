@@ -1,7 +1,7 @@
-(ns clj-bittorrent.urlencode
+(ns clj-bittorrent.tracker.urlencode
   "Make url-encoded byte arrays."
-  (:require [clj-bittorrent.binary :as b]
-            [clj-bittorrent.binary :as bin]
+  (:require [clj-bittorrent.math.binary :as b]
+            [clj-bittorrent.math.binary :as bin]
             [schema.core :as schema]))
 
 

@@ -1,13 +1,13 @@
-(ns clj-bittorrent.message
+(ns clj-bittorrent.peer.message
   "Encode and decode messages between peers."
   (:require [clojure.set :as sets]
             [schema.core :as schema]
-            [clj-bittorrent.binary :as bin]
-            [clj-bittorrent.blocks :as blocks]
-            [clj-bittorrent.connection :as c]
-            [clj-bittorrent.net :as net]
-            [clj-bittorrent.numbers :as n]
-            [clj-bittorrent.peer :as peer])
+            [clj-bittorrent.math.binary :as bin]
+            [clj-bittorrent.pieces.blocks :as blocks]
+            [clj-bittorrent.peer.connection :as c]
+            [clj-bittorrent.net.net :as net]
+            [clj-bittorrent.math.numbers :as n]
+            [clj-bittorrent.peer.peer :as peer])
   (:import (java.nio.charset StandardCharsets)))
 
 ;; Encoding a handshake message

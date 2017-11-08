@@ -1,6 +1,6 @@
-(ns clj-bittorrent.binary-test
+(ns clj-bittorrent.math.binary-test
   (:require [clojure.test :refer :all]
-            [clj-bittorrent.binary :as bin]
+            [clj-bittorrent.math.binary :as bin]
             [clojure.test.check.clojure-test :refer :all]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]))

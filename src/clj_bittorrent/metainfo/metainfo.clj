@@ -1,12 +1,12 @@
-(ns clj-bittorrent.metainfo
+(ns clj-bittorrent.metainfo.metainfo
   "Extracts information from a metainfo (AKA .torrent) file."
   (:refer-clojure :exclude [read])
   (:require [clj-bencode.core :as b]
             [clojure.set :as s]
-            [clj-bittorrent.binary :as bin]
-            [clj-bittorrent.hash :as hash]
+            [clj-bittorrent.math.binary :as bin]
+            [clj-bittorrent.math.hash :as hash]
             [schema.core :as schema]
-            [clj-bittorrent.numbers :as n]))
+            [clj-bittorrent.math.numbers :as n]))
 
 (def InfoHash
   "An identifier for a torrent, calculated by taking the SHA-1 hash of the

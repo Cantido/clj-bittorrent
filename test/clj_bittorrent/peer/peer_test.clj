@@ -1,6 +1,6 @@
-(ns clj-bittorrent.peer-test
+(ns clj-bittorrent.peer.peer-test
   (:require [clojure.test :refer :all]
-            [clj-bittorrent.peer :as peer]
+            [clj-bittorrent.peer.peer :as peer]
             [schema.test :as st]))
 
 (use-fixtures :once st/validate-schemas)

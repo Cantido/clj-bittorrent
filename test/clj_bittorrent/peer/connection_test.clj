@@ -1,6 +1,6 @@
-(ns clj-bittorrent.connection-test
+(ns clj-bittorrent.peer.connection-test
   (:require [clojure.test :refer :all]
-            [clj-bittorrent.connection :as conn]))
+            [clj-bittorrent.peer.connection :as conn]))
 
 (deftest download?-test
   (is (= true (conn/download-allowed? {:client {:interested true}

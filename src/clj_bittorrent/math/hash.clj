@@ -1,7 +1,7 @@
-(ns clj-bittorrent.hash
+(ns clj-bittorrent.math.hash
   "Hashing functions."
   (:require [schema.core :as schema]
-            [clj-bittorrent.binary :as bin])
+            [clj-bittorrent.math.binary :as bin])
   (:import (java.security MessageDigest)))
 
 (def Sha1Hash

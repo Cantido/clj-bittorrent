@@ -1,8 +1,9 @@
-(ns clj-bittorrent.blocks
+(ns clj-bittorrent.pieces.blocks
+  "Assemble blocks of data into larger blocks."
   (:require [clojure.set :as s]
             [schema.core :as schema]
-            [clj-bittorrent.numbers :as n]
-            [clj-bittorrent.binary :as bin]))
+            [clj-bittorrent.math.numbers :as n]
+            [clj-bittorrent.math.binary :as bin]))
 
 (def BlockData
   "A piece is made up of several blocks of binary data."

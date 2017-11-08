@@ -1,6 +1,6 @@
-(ns clj-bittorrent.net
+(ns clj-bittorrent.net.net
   (:require [schema.core :as schema]
-            [clj-bittorrent.numbers :as n]))
+            [clj-bittorrent.math.numbers :as n]))
 
 (defn port?
   "Returns true if x is a number within the range of valid port numbers."

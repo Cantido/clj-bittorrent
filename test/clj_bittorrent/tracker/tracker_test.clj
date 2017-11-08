@@ -1,13 +1,13 @@
-(ns clj-bittorrent.tracker-test
+(ns clj-bittorrent.tracker.tracker-test
   (:require [clojure.test :refer :all]
-            [clj-bittorrent.tracker :as tracker]
+            [clj-bittorrent.tracker.tracker :as tracker]
             [clojure.java.io :as io]
-            [clj-bittorrent.metainfo :as m]
-            [clj-bittorrent.binary :as bin]
+            [clj-bittorrent.metainfo.metainfo :as m]
+            [clj-bittorrent.math.binary :as bin]
             [schema.test :as st]
             [schema.core :as schema]
-            [clj-bittorrent.metainfo :as metainfo]
-            [clj-bittorrent.peer :as peer])
+            [clj-bittorrent.metainfo.metainfo :as metainfo]
+            [clj-bittorrent.peer.peer :as peer])
   (:import (java.io File)
            (java.security MessageDigest)))
 

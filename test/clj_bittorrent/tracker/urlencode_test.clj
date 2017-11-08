@@ -1,10 +1,10 @@
-(ns clj-bittorrent.urlencode-test
+(ns clj-bittorrent.tracker.urlencode-test
   (:require [clojure.test :refer :all]
-            [clj-bittorrent.urlencode :as u]
+            [clj-bittorrent.tracker.urlencode :as u]
             [clojure.test.check.clojure-test :refer :all]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
-            [clj-bittorrent.binary :as b]))
+            [clj-bittorrent.math.binary :as b]))
 
 
 (def info-hash
