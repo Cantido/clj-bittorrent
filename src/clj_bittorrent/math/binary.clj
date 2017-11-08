@@ -1,43 +1,18 @@
 (ns clj-bittorrent.math.binary
   "Byte-manipulation functions."
   (:require [clojure.string :as string]
-            [schema.core :as schema]))
+            [schema.core :as schema]
+            [clj-bittorrent.math.numbers :as n]))
 
-(defn max-at-bits
+(schema/defn max-at-bits :- schema/Int
   "Find the maximum value that n bits can represent."
-  [n]
+  [n :- schema/Int]
   (bigint (Math/pow 2 n)))
 
-(defn max-at-bytes
+(schema/defn max-at-bytes :- schema/Int
   "Find the maximum value that n bytes can represent."
-  [n]
+  [n :- schema/Int]
   (max-at-bits (* n 8)))
-
-(defn bitfield-byte
-  "Returns the set of indices (left-right) of the byte that are
-   set to 1."
-  [x]
-  (set
-    (for [i (range 8)
-          :when (bit-test x i)]
-      (- 7 i))))
-
-(defn- reduce-bitfield-array
-  "A reduction function that fills a set with the indices in a vector
-   that are set to 1."
-  [init i v]
-  (apply conj
-         init
-         (map
-           (partial + (* 8 i))
-           (bitfield-byte v))))
-
-(defn bitfield-set
-  "Returns the set of indices of all 1-bits in the given byte array.
-   Zero indexed and capped at the total number of bits minus one"
-  [x]
-  {:post [(<= (count %) (* 8 (count x)))]}
-  (reduce-kv reduce-bitfield-array #{} (vec x)))
 
 (defn fits-in-bytes-signed?
   "Test if x can fit into n signed bytes."
@@ -64,54 +39,81 @@
   ^Boolean [x]
   (fits-in-bytes-signed? 1 x))
 
-
 (defn sint?
   "Test if x can fit into a signed four-byte integer."
   ^Boolean [x]
   (fits-in-bytes-signed? 4 x))
 
+(defn all-signed?
+  "Test if x contains only signed bytes."
+  [x]
+  (every? sbyte? x))
+
 (def SignedByte
   "An eight-bit signed byte in the range of [-128, 127]"
-  (schema/constrained schema/Int sbyte?))
+  (schema/constrained schema/Int sbyte? "signed-byte?"))
 
 (def UnsignedByte
   "An eight-bit unsigned byte in the range of [0, 255]"
-  (schema/constrained schema/Int ubyte?))
+  (schema/constrained schema/Int ubyte? "unsigned-byte?"))
 
 (def ByteArray
   "An ordered collection of signed bytes"
-  (schema/pred (partial every? sbyte?)))
+  (schema/pred all-signed?))
 
-(defn ubyte
+(def HexFormattedByte
+  (schema/constrained schema/Str #(re-matches #"[0-9A-F]{2}" %)))
+
+(schema/defn bitfield-byte :- #{(schema/constrained schema/Int #(<= 0 % 7))}
+  "Returns the set of indices (left-right) of the byte that are
+   set to 1."
+  [x :- SignedByte]
+  (set
+    (for [i (range 8)
+          :when (bit-test x i)]
+      (- 7 i))))
+
+(defn- reduce-bitfield-array
+  "A reduction function that fills a set with the indices in a vector
+   that are set to 1."
+  [init i v]
+  (apply conj
+         init
+         (map
+           (partial + (* 8 i))
+           (bitfield-byte v))))
+
+(schema/defn bitfield-set :- #{schema/Int}
+  "Returns the set of indices of all 1-bits in the given byte array.
+   Zero indexed and capped at the total number of bits minus one"
+  [x :- ByteArray]
+  {:post [(<= (count %) (* 8 (count x)))]}
+  (reduce-kv reduce-bitfield-array #{} (vec x)))
+
+(schema/defn ubyte :- UnsignedByte
   "converts a signed byte to an unsigned byte.
    Unsigned bytes must be stored as integers."
-  ^Integer [b]
-  {:pre [(sbyte? b)]
-   :post [(ubyte? %)]}
+  [b :- SignedByte]
   (Byte/toUnsignedInt (byte b)))
 
-(defn sbyte
+(schema/defn sbyte :- SignedByte
   "Converts an unsigned byte into a signed byte."
-  ^Byte [b]
-  {:pre [(ubyte? b)]
-   :post [(sbyte? %)]}
+  [b :- UnsignedByte]
   (unchecked-byte (+ 256 b)))
 
-(defn int-from-bytes
+(schema/defn int-from-bytes :- schema/Int
   "Creates an bigint from a seq of bytes"
-  [xs]
+  [xs :- ByteArray]
   (BigInteger. (byte-array (seq xs))))
 
-(defn hexbyte
+(schema/defn hexbyte :- HexFormattedByte
   "Formats an unsigned byte into a two-character hexidecimal code."
-  ^String [b]
-  {:pre [(ubyte? b)]
-   :post [(= 2 (count (seq %)))]}
+  [b :- UnsignedByte]
   (format "%02X" (int b)))
 
-(defn ipv4-address
+(schema/defn ipv4-address :- schema/Str
   "Decodes a seq of four unsigned bytes into an IPv4 address."
-  ^String [s]
+  [s :- [UnsignedByte]]
   {:pre [(= 4 (count (seq s)))
          (every? ubyte? (seq s))]
    :post [(some? %)
@@ -122,7 +124,7 @@
           (>= 12 (count (remove #{\.} %)))]}
   (string/join "." (seq s)))
 
-(defn pad-bytes
+(schema/defn pad-bytes :- ByteArray
   "Left-pads a byte array to the given size.
    Returns the array if it's equal to or bigger than n.
    This will not shrink the array."
@@ -131,16 +133,17 @@
     (recur n (cons 0x00 x))
     x))
 
-(defn int-bytearray
+(schema/defn int-bytearray :- ByteArray
   "Converts an integer into a byte array."
-  [x]
+  [x :- n/NonNegativeInt]
   {:pre [(not (neg? x))]
    :post [(<= 1 (count %))]}
   (.toByteArray (BigInteger/valueOf (int x))))
 
-(defn int-byte-field
+(schema/defn int-byte-field :- ByteArray
   "Converts an integer x into a byte array of size n."
-  [n x]
+  [n :- n/Length
+   x :- n/NonNegativeInt]
   {:pre [(< x (Math/pow 2 (* n 8)))]
    :post [(<= n (count %))]}
   (pad-bytes n (int-bytearray x)))

@@ -3,7 +3,10 @@
             [clojure.test.check.clojure-test :refer :all]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
-            [clj-bittorrent.math.binary :as bin]))
+            [clj-bittorrent.math.binary :as bin]
+            [schema.test :as st]))
+
+(use-fixtures :once st/validate-schemas)
 
 (deftest sbyte?-test
   (is (= true (bin/sbyte? -128)))
@@ -61,8 +64,8 @@
   (is (= '(0) (bin/pad-bytes 0 [0x00])))
   (is (= '(0) (bin/pad-bytes 1 [0x00])))
   (is (= '(0 0) (bin/pad-bytes 2 [0x00])))
-  (is (= '(0 0xDD) (bin/pad-bytes 2 [0xDD])))
-  (is (= '(0xDD 0xFF) (bin/pad-bytes 1 [0xDD 0xFF]))))
+  (is (= '(0 -128) (bin/pad-bytes 2 [-128])))
+  (is (= '(-128 127) (bin/pad-bytes 1 [-128 127]))))
 
 (deftest int-bytearray-test
   (is (= '(0) (seq (bin/int-bytearray 0))))
