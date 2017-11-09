@@ -40,6 +40,7 @@
    :have                       HasPieces
    :blocks                     HasBlocks
    :requested                  RequestedBlocks
+   (schema/optional-key :pending-verify) HasBlocks
    (schema/optional-key :port) net/Port})
 
 (schema/def peer-default-state :- Peer
@@ -117,3 +118,17 @@
            (set %)
            (select-keys block [:index :offset :contents])))
       (un-request-blocks block)))
+
+(defn finished-piece? [n p]
+  (= n (count (:contents p))))
+
+(defn finished-pieces [n p]
+  (s/select
+    (partial finished-piece? n)
+    (:blocks p)))
+
+(defn collect-finished-pieces [n p]
+  (let [finished (finished-pieces n p)]
+    (-> p
+      (update-in [:blocks] #(s/difference % finished))
+      (update-in [:pending-verify] #(s/union finished %)))))

@@ -79,3 +79,27 @@
          (:requested (peer/request-block
                        peer/peer-default-state
                        {:index 111 :offset 222 :length 333})))))
+
+(def finished-block
+  {:index 0 :offset 0 :contents [0 1 2]})
+
+
+(def unfinished-block
+  {:index 1 :offset 0 :contents [0]})
+
+(def finished-peer
+  (assoc peer/peer-default-state
+         :blocks
+         #{finished-block unfinished-block}))
+
+(deftest finished-pieces-test
+  (is (= #{finished-block}
+         (peer/finished-pieces 3 finished-peer))))
+
+(deftest finished-pieces-test
+  (is (= {:blocks #{unfinished-block}
+          :pending-verify #{finished-block}}
+         (peer/collect-finished-pieces
+           3
+           {:blocks #{finished-block unfinished-block}
+            :pending-verify #{}}))))
