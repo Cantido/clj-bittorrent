@@ -6,7 +6,8 @@
             [clj-bittorrent.math.hash :as hash]
             [clj-bittorrent.math.numbers :as n]
             [clj-bittorrent.net.net :as net]
-            [clj-bittorrent.pieces.blocks :as blocks])
+            [clj-bittorrent.pieces.blocks :as blocks]
+            [clj-bittorrent.pieces.pieces :as pieces])
   (:import (java.nio.charset StandardCharsets)))
 
 (def PeerId
@@ -91,7 +92,8 @@
     n :- n/Index]
    (-> peer
        (update :have #(conj (set %) n))
-       (un-request-blocks n)))
+       (un-request-blocks n)
+       (update :pending-verify #(pieces/remove-indexed n %))))
   ([peer n & more]
    (reduce has-piece (has-piece peer n) more)))
 

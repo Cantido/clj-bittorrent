@@ -221,41 +221,47 @@
            {:id :not-interested}
            uninterested-remote)))
 
-  (is (= peer-with-piece
-         (msg/apply-msg
-           {:id :have
-            :index 6969}
-           conn/connection-default-state)))
+  (is (= (:have peer-with-piece)
+         (:have
+           (msg/apply-msg
+             {:id :have
+              :index 6969}
+             conn/connection-default-state))))
 
-  (is (= peer-with-piece
-         (msg/apply-msg
-           {:id :have
-            :index 6969}
-           peer-with-piece)))
+  (is (= (:have peer-with-piece)
+         (:have
+           (msg/apply-msg
+             {:id :have
+              :index 6969}
+             peer-with-piece))))
 
-  (is (= (:peer peer-with-piece)
-         (:peer (msg/apply-msg
-                  {:id :have
-                   :index 6969}
-                  peer-with-requested))))
+  (is (= (:peer (:have peer-with-piece))
+         (:peer (:have
+                  (msg/apply-msg
+                    {:id :have
+                     :index 6969}
+                    peer-with-requested)))))
 
-  (is (= peer-with-pieces
-         (msg/apply-msg
-           {:id :bitfield
-            :indices #{6969 420 666}}
-           conn/connection-default-state)))
+  (is (= (:have peer-with-pieces)
+         (:have
+           (msg/apply-msg
+             {:id :bitfield
+              :indices #{6969 420 666}}
+             conn/connection-default-state))))
 
-  (is (= peer-with-pieces
-         (msg/apply-msg
-           {:id :bitfield
-            :indices #{6969 420 666}}
-           peer-with-piece)))
+  (is (= (:have peer-with-pieces)
+         (:have
+           (msg/apply-msg
+             {:id :bitfield
+              :indices #{6969 420 666}}
+             peer-with-piece))))
 
-  (is (= peer-with-pieces
-         (msg/apply-msg
-           {:id :bitfield
-            :indices #{6969 420 666}}
-           peer-with-piece)))
+  (is (= (:have peer-with-pieces)
+         (:have
+           (msg/apply-msg
+             {:id :bitfield
+              :indices #{6969 420 666}}
+             peer-with-piece))))
 
   (is (= peer-with-requested
          (msg/apply-msg

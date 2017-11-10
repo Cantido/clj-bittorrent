@@ -44,7 +44,11 @@
                  666 420)]
 
     (is (= #{666 420} (:have result)))
-    (is (= #{} (:requested result)))))
+    (is (= #{} (:requested result))))
+  (let [result (peer/has-piece
+                 (peer-with :pending-verify #{{:index 420 :offset 0 :contents [1]}})
+                 420)]
+    (is (= #{} (:pending-verify result)))))
 
 (def piece-zero {:index 0 :offset 0 :contents [0]})
 (def piece-one  {:index 0 :offset 1 :contents [1]})
