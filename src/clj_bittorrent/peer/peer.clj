@@ -134,3 +134,10 @@
     (-> p
       (update-in [:blocks] #(s/difference % finished))
       (update-in [:pending-verify] #(s/union finished %)))))
+
+(defn validate-pieces [m p]
+  (let [[good bad] (pieces/validate m (:pending-verify p))]
+    (-> p
+        (update :pending-verify #(s/difference % good bad))
+        (update :verified #(s/union % good))
+        (update :invalid #(s/union % bad)))))
