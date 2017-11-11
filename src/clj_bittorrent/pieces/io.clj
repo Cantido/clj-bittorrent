@@ -1,5 +1,5 @@
 (ns clj-bittorrent.pieces.io
-  (:require [clj-bittorrent.mmap :as mmap]))
+  (:require [clj-mmap.core :as mmap]))
 
 (defn write-pieces
   "Write all data possessed by the client for torrent m to the filename at f."
