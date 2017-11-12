@@ -34,4 +34,4 @@
       (or (and (= 1 enc-length)
                (Character/isDefined (char (first (seq encoded)))))
           (and (= 3 enc-length)
-               (clojure.string/starts-with? encoded "%"))))))
+               (.startsWith encoded "%"))))))
