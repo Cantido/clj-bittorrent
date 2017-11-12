@@ -79,7 +79,7 @@
         (int))))
 
 (defn- calc-info-hash [m]
-  (map bin/ubyte (hash/sha1 (b/encode (:info m)))))
+  (map bin/ubyte (hash/sha1 (b/encode (get m "info")))))
 
 (defn read
   "Decode a BitTorrent metainfo file, AKA a .torrent file.
