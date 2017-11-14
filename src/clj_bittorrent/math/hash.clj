@@ -10,4 +10,4 @@
 (schema/defn sha1 :- Sha1Hash
   "Hash a byte array with SHA-1."
   [x :- bin/ByteArray]
-  (.digest (MessageDigest/getInstance "sha1") (bytes x)))
+  (seq (.digest (MessageDigest/getInstance "sha1") (byte-array x))))
