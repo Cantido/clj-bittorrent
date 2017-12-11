@@ -8,7 +8,8 @@
             [clj-bittorrent.peer.connection :as c]
             [clj-bittorrent.peer.peer :as peer]
             [clj-bittorrent.pieces.blocks :as blocks])
-  (:import (java.nio.charset StandardCharsets)))
+  (:import (java.nio.charset StandardCharsets)
+           (java.io Reader)))
 
 ;; Encoding a handshake message
 
@@ -318,6 +319,16 @@
 
 (schema/defmethod recv :port :- PortMessage
                   [x] (recv-port x))
+
+(defn read
+  "Returns the next message off the reader"
+  [^Reader reader]
+  (let [lenbytes (repeatedly 4 #(.read reader))
+        mlength (-> lenbytes
+                    byte-array
+                    bin/int-from-bytes)
+        body (repeatedly mlength #(.read reader))]
+    (recv (concat lenbytes body))))
 
 (defn apply-type [x & more] (:id x))
 
