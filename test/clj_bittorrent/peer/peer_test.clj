@@ -8,26 +8,27 @@
 (defn peer-with [key val]
   (assoc peer/peer-default-state key val))
 
+(defn peer-state [state]
+  (assoc peer/peer-default-state :state state))
+
 (defn block-id [i]
   {:index i :offset 1 :length 1})
 
 (deftest choke-test
-  (is (= true (:choked (peer/choke (peer-with :choked false)))))
-  (is (= true (:choked (peer/choke (peer-with :choked true))))))
+  (is (= :choked (:state (peer/choke (peer-state :choked)))))
+  (is (= :choked (:state (peer/choke (peer-state :ready))))))
 
 (deftest unchoke-test
-  (is (= false (:choked (peer/unchoke (peer-with :choked false)))))
-  (is (= false (:choked (peer/unchoke (peer-with :choked true))))))
+  (is (= :ready (:state (peer/unchoke (peer-state :ready)))))
+  (is (= :ready (:state (peer/unchoke (peer-state :choked))))))
 
 (deftest interested-test
-  (is (= true (:interested (peer/interested (peer-with :interested false)))))
-  (is (= true (:interested (peer/interested (peer-with :interested true))))))
+  (is (= :interested (:state (peer/interested (peer-state :ready)))))
+  (is (= :interested (:state (peer/interested (peer-state :interested))))))
 
 (deftest not-interested-test
-  (is (= false (:interested (peer/not-interested
-                              (peer-with :interested false)))))
-  (is (= false (:interested (peer/not-interested
-                              (peer-with :interested true))))))
+  (is (= :ready (:state (peer/not-interested (peer-state :ready)))))
+  (is (= :ready (:state (peer/not-interested (peer-state :interested))))))
 
 (deftest has-piece-test
   (is (= #{666} (:have (peer/has-piece (peer-with :have #{}) 666))))

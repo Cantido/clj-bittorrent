@@ -2,22 +2,24 @@
   (:require [clojure.test :refer :all]
             [clj-bittorrent.peer.connection :as conn]))
 
+(defn conn-state [client-state peer-state]
+  {:client {:state client-state}
+   :peer {:state peer-state}})
+
+(defn can-download? [client-state peer-state]
+  (conn/download-allowed? (conn-state client-state peer-state)))
+
+(defn can-upload? [client-state peer-state]
+  (conn/upload-allowed? (conn-state client-state peer-state)))
+
 (deftest download?-test
-  (is (= true (conn/download-allowed? {:client {:interested true}
-                                       :peer   {:choked false}})))
-  (is (= false (conn/download-allowed? {:client {:interested true}
-                                        :peer   {:choked true}})))
-  (is (= false (conn/download-allowed? {:client {:interested false}
-                                        :peer   {:choked true}})))
-  (is (= false (conn/download-allowed? {:client {:interested false}
-                                        :peer   {:choked false}}))))
+  (is (= true (can-download? :interested :ready)))
+  (is (= false (can-download? :interested :choked)))
+  (is (= false (can-download? :ready :choked)))
+  (is (= false (can-download? :ready :ready))))
 
 (deftest upload?-test
-  (is (= true (conn/upload-allowed? {:client {:choked false}
-                                     :peer   {:interested true}})))
-  (is (= false (conn/upload-allowed? {:client {:choked true}
-                                      :peer   {:interested true}})))
-  (is (= false (conn/upload-allowed? {:client {:choked false}
-                                      :peer   {:interested false}})))
-  (is (= false (conn/upload-allowed? {:client {:choked true}
-                                      :peer   {:interested false}}))))
+  (is (= true (can-upload? :ready :interested)))
+  (is (= false (can-upload? :choked :interested)))
+  (is (= false (can-upload? :ready :ready)))
+  (is (= false (can-upload? :choked :ready))))

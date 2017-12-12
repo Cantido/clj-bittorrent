@@ -11,16 +11,16 @@
   (assoc-in conn/connection-default-state ks v))
 
 (def choked-client
-  (client-with [:client :choked] true))
+  (client-with [:client :state] :choked))
 
 (def unchoked-client
-  (client-with [:client :choked] false))
+  (client-with [:client :state] :ready))
 
 (def interested-remote
-  (client-with [:peer :interested] true))
+  (client-with [:peer :state] :interested))
 
 (def uninterested-remote
-  (client-with [:peer :interested] false))
+  (client-with [:peer :state] :ready))
 
 (def peer-with-piece
   (client-with [:peer :have] #{6969}))

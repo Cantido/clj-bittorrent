@@ -13,8 +13,8 @@
 
 (defn transfer-allowed?
   [from to]
-  (and (not (:choked from))
-       (:interested to)))
+  (and (not (= :choked (:state from)))
+       (= :interested (:state to))))
 
 (defn download-allowed?
   "Check if a download is allowed from the given peers."

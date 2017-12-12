@@ -10,6 +10,49 @@
             [clj-bittorrent.pieces.pieces :as pieces])
   (:import (java.nio.charset StandardCharsets)))
 
+(def peer-fsm
+  {:start {:open-port :port-opened}
+   :port-opened {:announce-port :waiting-for-handshake}
+
+   :waiting-for-handshake {:receive-handshake :choked}
+
+   :choked {:choke :choked
+            :unchoke :ready
+            :interested :choked-interested
+            :not-interested :choked}
+
+   :interested {:choke :choked-interested
+                :unchoke :interested
+                :interested :interested
+                :not-interested :ready}
+
+   :choked-interested {:choke :choked-interested
+                       :unchoke :interested
+                       :interested :choked-interested
+                       :not-interested :choked}
+
+   :ready {:choke :choked
+           :unchoke :ready
+           :interested :interested
+           :not-interested :ready}})
+
+(defn- next-state
+  "Updates a peer to contain the state reached by transitioning from the
+  current state."
+  [peer transition]
+  (let [new-state (get-in peer-fsm [(:state peer) transition])]
+    (assoc peer :state new-state)))
+
+(def PeerState
+  "The position of the peer in the BitTorrent state machine"
+  (schema/enum
+    :start
+    :waiting-for-handshake
+    :choked
+    :interested
+    :choked-interested
+    :ready))
+
 (def PeerId
   "A unique identifier for a peer."
   hash/Sha1Hash)
@@ -36,8 +79,7 @@
 
 (def Peer
   "A peer is trying to download or upload pieces of a file."
-  {:choked                     Choked
-   :interested                 Interested
+  {:state                      PeerState
    :have                       HasPieces
    :blocks                     HasBlocks
    :requested                  RequestedBlocks
@@ -45,8 +87,7 @@
    (schema/optional-key :port) net/Port})
 
 (schema/def peer-default-state :- Peer
-  {:choked true
-   :interested false
+  {:state :start
    :have #{}
    :blocks #{}
    :requested #{}})
@@ -55,24 +96,24 @@
   "Choke the peer. The peer that is choked will be ignored
    until it is unchoked."
   [peer :- Peer]
-  (assoc peer :choked true))
+  (next-state peer :choke))
 
 (schema/defn unchoke :- Peer
   "Unchoke the peer. The peer will no longer be ignored."
   [peer :- Peer]
-  (assoc peer :choked false))
+  (next-state peer :unchoke))
 
 (schema/defn interested :- Peer
   "Mark the peer as interested. An interested peer wants something
    that other peers have to offer, and will begin requesting blocks."
   [peer :- Peer]
-  (assoc peer :interested true))
+  (next-state peer :interested))
 
 (schema/defn not-interested :- Peer
   "Mark the peer as not interested. A peer that is not interested will
    not send requests for data to other peers."
   [peer :- Peer]
-  (assoc peer :interested false))
+  (next-state peer :not-interested))
 
 (schema/defn un-request-blocks :- Peer
   ([peer :- Peer
