@@ -2,18 +2,29 @@
   (:require [clj-bittorrent.net.tcp :as tcp]
             [clj-bittorrent.message.state :as msgapply]
             [clj-bittorrent.message.decode :as msgdecode])
-  (:import (java.io Reader Writer)
-           (org.apache.commons.io IOUtils)))
+  (:import (java.io Reader Writer)))
 
-(defn create-message-handler [peer]
-  (fn [^Reader reader ^Writer writer]
-    (msgapply/apply-msg
-      (msgdecode/next-msg reader)
-      peer)))
+(defn apply-next-msg
+  "Applies the next message on reader to the given peer."
+  [peer ^Reader reader ^Writer writer]
+  (msgapply/apply-msg
+    (msgdecode/next-msg reader)
+    peer))
 
-(defn build-server [peer]
+(defn handle-msg
+  "Applies the next message on reader to the given agent.
+  Since reading from the socket is always blocking, the
+  message will always be handled by send-off."
+  [peer-agent ^Reader reader ^Writer writer]
+  (send-off
+    peer-agent
+    apply-next-msg
+    reader
+    writer))
+
+(defn build-server
+  "Create a TCP server that will accept messages to update an agent."
+  [peer-agent]
   (tcp/tcp-server
     :port    5000
-    :handler (-> peer
-                 create-message-handler
-                 tcp/wrap-io)))
+    :handler (tcp/wrap-io (partial handle-msg peer-agent))))
