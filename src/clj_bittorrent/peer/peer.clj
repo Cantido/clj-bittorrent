@@ -48,6 +48,8 @@
   "Updates a peer to contain the state reached by transitioning from the
   current state."
   [peer transition]
+  {:pre [(:state peer) transition]
+   :post [(:state %)]}
   (let [new-state (get-in peer-fsm [(:state peer) transition])]
     (assoc peer :state new-state)))
 
