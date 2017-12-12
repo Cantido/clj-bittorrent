@@ -1,8 +1,8 @@
-(ns clj-bittorrent.peer.message-test
+(ns clj-bittorrent.message.message-test
   (:require [clojure.test :refer :all]
             [schema.test :as st]
             [clj-bittorrent.peer.connection :as conn]
-            [clj-bittorrent.peer.message :as msg]))
+            [clj-bittorrent.message.message :as msg]))
 
 (use-fixtures :once st/validate-schemas)
 

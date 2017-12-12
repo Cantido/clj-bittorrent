@@ -1,4 +1,4 @@
-(ns clj-bittorrent.peer.message
+(ns clj-bittorrent.message.message
   "Encode and decode messages between peers."
   (:require [clojure.set :as sets]
             [schema.core :as schema]
