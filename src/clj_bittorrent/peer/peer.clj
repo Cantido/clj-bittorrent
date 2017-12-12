@@ -11,30 +11,38 @@
   (:import (java.nio.charset StandardCharsets)))
 
 (def peer-fsm
-  {:start {:open-port :port-opened}
-   :port-opened {:announce-port :waiting-for-handshake}
+  {:start
+     {:open-port :port-opened}
 
-   :waiting-for-handshake {:receive-handshake :choked}
+   :port-opened
+     {:announce-port :waiting-for-handshake}
 
-   :choked {:choke :choked
-            :unchoke :ready
-            :interested :choked-interested
-            :not-interested :choked}
+   :waiting-for-handshake
+     {:receive-handshake :choked}
 
-   :interested {:choke :choked-interested
-                :unchoke :interested
-                :interested :interested
-                :not-interested :ready}
+   :ready
+     {:choke :choked
+      :unchoke :ready
+      :interested :interested
+      :not-interested :ready}
 
-   :choked-interested {:choke :choked-interested
-                       :unchoke :interested
-                       :interested :choked-interested
-                       :not-interested :choked}
+   :choked
+     {:choke :choked
+      :unchoke :ready
+      :interested :choked-interested
+      :not-interested :choked}
 
-   :ready {:choke :choked
-           :unchoke :ready
-           :interested :interested
-           :not-interested :ready}})
+   :interested
+     {:choke :choked-interested
+      :unchoke :interested
+      :interested :interested
+      :not-interested :ready}
+
+   :choked-interested
+     {:choke :choked-interested
+      :unchoke :interested
+      :interested :choked-interested
+      :not-interested :choked}})
 
 (defn- next-state
   "Updates a peer to contain the state reached by transitioning from the
