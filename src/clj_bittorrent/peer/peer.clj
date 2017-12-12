@@ -7,10 +7,11 @@
             [clj-bittorrent.math.numbers :as n]
             [clj-bittorrent.net.net :as net]
             [clj-bittorrent.pieces.blocks :as blocks]
-            [clj-bittorrent.pieces.pieces :as pieces])
+            [clj-bittorrent.pieces.pieces :as pieces]
+            [clj-bittorrent.state :as fsm])
   (:import (java.nio.charset StandardCharsets)))
 
-(def peer-fsm
+(def peer-states
   {:start
      {:open-port :port-opened}
 
@@ -44,14 +45,13 @@
       :interested :choked-interested
       :not-interested :choked}})
 
+(def peer-fsm (fsm/fsm peer-states))
+
 (defn- next-state
-  "Updates a peer to contain the state reached by transitioning from the
-  current state."
   [peer transition]
   {:pre [(:state peer) transition]
    :post [(:state %)]}
-  (let [new-state (get-in peer-fsm [(:state peer) transition])]
-    (assoc peer :state new-state)))
+  (update-in peer [:state] #(peer-fsm % transition)))
 
 (def PeerState
   "The position of the peer in the BitTorrent state machine"
