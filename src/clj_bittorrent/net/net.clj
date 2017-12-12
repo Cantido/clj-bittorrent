@@ -19,3 +19,6 @@
 (def Url
   "A URL"
   schema/Str)
+
+(defn ip-address []
+  "0.0.0.0")
