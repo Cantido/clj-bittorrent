@@ -4,7 +4,8 @@
   :license {:name "GNU General Public License"
             :url "http://www.gnu.org/licenses/gpl.txt"}
   :profiles {:dev {:resource-paths ["test-resources"]
-                   :dependencies [[org.clojure/test.check "0.9.0"]]}
+                   :dependencies [[org.clojure/test.check "0.9.0"]
+                                  [fsmviz "0.1.3"]]}
              :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]]}
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}}
