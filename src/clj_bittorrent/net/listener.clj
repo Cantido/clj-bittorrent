@@ -12,9 +12,8 @@
       peer)))
 
 (defn build-server [peer]
-  (tcp/start
-    (tcp/tcp-server
-      :port    5000
-      :handler (-> peer
-                   create-message-handler
-                   tcp/wrap-io))))
+  (tcp/tcp-server
+    :port    5000
+    :handler (-> peer
+                 create-message-handler
+                 tcp/wrap-io)))
