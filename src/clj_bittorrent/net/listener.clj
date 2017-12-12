@@ -1,13 +1,14 @@
 (ns clj-bittorrent.net.listener
   (:require [clj-bittorrent.net.tcp :as tcp]
-            [clj-bittorrent.peer.message :as msg])
+            [clj-bittorrent.message.state :as msgapply]
+            [clj-bittorrent.message.decode :as msgdecode])
   (:import (java.io Reader Writer)
            (org.apache.commons.io IOUtils)))
 
 (defn create-message-handler [peer]
   (fn [^Reader reader ^Writer writer]
-    (msg/apply-msg
-      (msg/read reader)
+    (msgapply/apply-msg
+      (msgdecode/next-msg reader)
       peer)))
 
 (defn build-server [peer]

@@ -94,7 +94,7 @@
 (schema/defmethod recv :port :- PortMessage
                   [x] (recv-port x))
 
-(defn read
+(defn next-msg
   "Returns the next message off the reader"
   [^Reader reader]
   (let [lenbytes (repeatedly 4 #(.read reader))
