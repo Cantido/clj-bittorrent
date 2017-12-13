@@ -8,7 +8,8 @@
             [clj-bittorrent.metainfo.schema :as mschema]
             [clj-bittorrent.peer.peer :as peer]
             [clj-bittorrent.peer.schema :as pschema]
-            [clj-bittorrent.tracker.tracker :as tracker])
+            [clj-bittorrent.tracker.tracker :as tracker]
+            [clj-bittorrent.tracker.schema :as tschema])
   (:import (java.io File)
            (java.security MessageDigest)))
 
@@ -42,7 +43,7 @@
     (is (= [{:ip "48.178.7.154" :port 8193}] result))
     (is (= {:ip "48.178.7.154" :port 8193} (first result)))))
 
-(schema/def example-request :- tracker/TrackerRequest
+(schema/def example-request :- tschema/TrackerRequest
   {:info-hash info-hash
    :peer-id peer-id
    :port 6881
@@ -109,12 +110,12 @@
 ;              example-request))))
 
 (deftest schema-test
-  (is (= nil (schema/check tracker/Interval 1000)))
-  (is (= nil (schema/check tracker/CompleteCount 1000)))
-  (is (= nil (schema/check tracker/IncompleteCount 1000)))
-  (is (= nil (schema/check tracker/Event "started")))
-  (is (= nil (schema/check tracker/Event "stopped")))
-  (is (= nil (schema/check tracker/Event "completed"))))
+  (is (= nil (schema/check tschema/Interval 1000)))
+  (is (= nil (schema/check tschema/CompleteCount 1000)))
+  (is (= nil (schema/check tschema/IncompleteCount 1000)))
+  (is (= nil (schema/check tschema/Event "started")))
+  (is (= nil (schema/check tschema/Event "stopped")))
+  (is (= nil (schema/check tschema/Event "completed"))))
 
 (deftest tracker-response-test
   (let [result (#'tracker/tracker-response example-response)]
