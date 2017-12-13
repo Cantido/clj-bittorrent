@@ -1,9 +1,9 @@
-(ns clj-bittorrent.download
+(ns clj-bittorrent.session
   (:require [clj-bittorrent.state :as fsm]
             [clj-bittorrent.tracker.tracker :as tracker]
             [clj-bittorrent.net.net :as net]))
 
-(def download-states
+(def session-fsm
   {:stopped
      {:start :started}
 
@@ -11,9 +11,9 @@
      {:complete :completed
       :stop :stopped}})
 
-(def ^:private next-state (fsm/entity-state-machine download-states))
+(def ^:private next-state (fsm/entity-state-machine session-fsm))
 
-(def new-download
+(def new-session
   {:state         :stopped
    :peer-id       0
    :port          0
@@ -29,14 +29,14 @@
    :metainfo      {}
    :connections   #{}})
 
-(defn announcement [dl]
+(defn announcement [s]
   (let [{:keys [metainfo
                 peer-id
                 port
                 uploaded
                 downloaded
                 left
-                ip]} dl
+                ip]} s
         info-hash (:info-hash metainfo)]
       {:tracker-url (:announce metainfo)
        :info-hash info-hash
@@ -61,14 +61,14 @@
 (def reduce-peers
   (partial reduce-keyed :peer-id))
 
-(defn announce-start [dl]
+(defn announce-start [s]
   (let [tracker-url [:metainfo :announce]
         response
         (tracker/announce
-          (get-in dl tracker-url)
-          (announcement dl))]))
+          (get-in s tracker-url)
+          (announcement s))]))
 
-(defn merge-tracker-response [dl tracker-url response]
+(defn merge-tracker-response [s tracker-url response]
   (let
     [{:keys [peers
              complete
@@ -79,7 +79,7 @@
            incomplete 0
            min-interval 0}}
      response]
-    (-> dl
+    (-> s
         (update-in [:seeders] #(assoc % tracker-url complete))
         (update-in [:leechers] #(assoc % tracker-url incomplete))
         (update-in [:interval] #(assoc % tracker-url interval))
@@ -89,11 +89,11 @@
 
 (defn start
   "Start the download."
-  [dl]
-  (let [tracker-url (get-in dl [:metainfo :announce])]
+  [s]
+  (let [tracker-url (get-in s [:metainfo :announce])]
     (->
-      (->> dl
+      (->> s
         announcement
         (tracker/announce tracker-url)
-        (merge-tracker-response dl tracker-url))
+        (merge-tracker-response s tracker-url))
       (next-state :start))))
