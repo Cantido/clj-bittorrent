@@ -1,7 +1,6 @@
 (ns clj-bittorrent.tracker.tracker
   "Interact with tracker servers."
-  (:require [clj-http.client :as client]
-            [clojure.set :as s]
+  (:require [clojure.set :as s]
             [schema.core :as schema]
             [clj-bencode.core :as b]
             [clj-bittorrent.math.binary :as bin]
@@ -72,11 +71,12 @@
 
 (schema/defn announce :- tschema/TrackerResponse
   "Announce yourself to the tracker for torrent map m."
-  [url :- net/Url
+  [http-client
+   url :- net/Url
    m :- tschema/TrackerRequest]
   {:pre [(some? m)
          (= 20 (count (:info-hash m)))]}
   (->> m
     (tracker-request url)
-    (client/request)
+    (http-client)
     (tracker-response)))
