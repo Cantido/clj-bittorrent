@@ -2,7 +2,10 @@
   "Functions for creating a threaded TCP server.
   Yanked from https://github.com/weavejester/tcp-server"
   (:require [clojure.java.io :as io])
-  (:import [java.net InetAddress ServerSocket SocketException Socket]))
+  (:import [java.net InetAddress
+                     ServerSocket
+                     SocketException
+                     Socket]))
 
 (defn- server-socket
   ^ServerSocket [server]

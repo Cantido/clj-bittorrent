@@ -1,8 +1,8 @@
 (ns clj-bittorrent.message.schema
-  (:require [clj-bittorrent.net.net :as net]
+  (:require [clojure.set :as set]
             [schema.core :as schema]
             [clj-bittorrent.math.numbers :as n]
-            [clojure.set :as set]))
+            [clj-bittorrent.net.net :as net]))
 
 (def msg-id
   {:keep-alive     nil

@@ -2,12 +2,12 @@
   "Manipulate peer maps."
   (:require [clojure.set :as s]
             [schema.core :as schema]
-            [clj-bittorrent.state :as fsm]
             [clj-bittorrent.math.numbers :as n]
             [clj-bittorrent.peer.schema :as pschema]
-            [clj-bittorrent.pieces.schema :as pcschema]
             [clj-bittorrent.pieces.blocks :as blocks]
-            [clj-bittorrent.pieces.pieces :as pieces])
+            [clj-bittorrent.pieces.pieces :as pieces]
+            [clj-bittorrent.pieces.schema :as pcschema]
+            [clj-bittorrent.state :as fsm])
   (:import (java.nio.charset StandardCharsets)))
 
 (def peer-states
@@ -137,9 +137,9 @@
       (update-in [:blocks] #(s/difference % finished))
       (update-in [:pending-verify] #(s/union finished %)))))
 
-(defn validate-pieces [m p]
-  (let [[good bad] (pieces/validate m (:pending-verify p))]
-    (-> p
-        (update :pending-verify #(s/difference % good bad))
-        (update :verified #(s/union % good))
-        (update :invalid #(s/union % bad)))))
+;(defn validate-pieces [m p]
+;  (let [[good bad] (pieces/validate m (:pending-verify p))]
+;    (-> p
+;        (update :pending-verify #(s/difference % good bad))
+;        (update :verified #(s/union % good))
+;        (update :invalid #(s/union % bad)))))

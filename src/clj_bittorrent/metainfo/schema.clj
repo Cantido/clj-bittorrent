@@ -1,9 +1,9 @@
 (ns clj-bittorrent.metainfo.schema
   "Schemas for metainfo data"
-  (:require [clj-bittorrent.math.hash :as hash]
-            [clj-bittorrent.math.numbers :as n]
-            [schema.core :as schema]
-            [clj-bittorrent.math.binary :as bin]))
+  (:require [schema.core :as schema]
+            [clj-bittorrent.math.binary :as bin]
+            [clj-bittorrent.math.hash :as hash]
+            [clj-bittorrent.math.numbers :as n]))
 
 (def InfoHash
   "An identifier for a torrent, calculated by taking the SHA-1 hash of the

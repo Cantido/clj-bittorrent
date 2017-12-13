@@ -1,8 +1,8 @@
 (ns clj-bittorrent.pieces.pieces
-  (:require [clj-bittorrent.math.hash :as hash]
-            [clj-bittorrent.math.numbers :as n]
+  (:require [clojure.set :as s]
             [clj-bittorrent.math.binary :as bin]
-            [clojure.set :as s]))
+            [clj-bittorrent.math.hash :as hash]
+            [clj-bittorrent.math.numbers :as n]))
 
 (defn valid-piece? [m p]
   (let [actual-sha (seq (hash/sha1 (byte-array (:contents p))))

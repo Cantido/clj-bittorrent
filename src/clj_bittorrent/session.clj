@@ -89,11 +89,11 @@
 
 (defn start
   "Start the download."
-  [s]
+  [s http-client]
   (let [tracker-url (get-in s [:metainfo :announce])]
     (->
       (->> s
         announcement
-        (tracker/announce tracker-url)
+        (tracker/announce http-client tracker-url)
         (merge-tracker-response s tracker-url))
       (next-state :start))))

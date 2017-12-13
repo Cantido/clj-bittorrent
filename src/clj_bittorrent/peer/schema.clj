@@ -1,10 +1,10 @@
 (ns clj-bittorrent.peer.schema
-  (:require [clj-bittorrent.net.net :as net]
-            [schema.core :as schema]
-            [clj-bittorrent.pieces.blocks :as blocks]
-            [clj-bittorrent.pieces.schema :as pcschema]
+  (:require [schema.core :as schema]
+            [clj-bittorrent.math.hash :as hash]
             [clj-bittorrent.math.numbers :as n]
-            [clj-bittorrent.math.hash :as hash]))
+            [clj-bittorrent.net.net :as net]
+            [clj-bittorrent.pieces.blocks :as blocks]
+            [clj-bittorrent.pieces.schema :as pcschema]))
 
 (def PeerState
   "The position of the peer in the BitTorrent state machine"

@@ -1,18 +1,12 @@
 (ns clj-bittorrent.tracker.tracker
   "Interact with tracker servers."
   (:require [clojure.set :as s]
-            [schema.core :as schema]
             [clj-bencode.core :as b]
+            [schema.core :as schema]
             [clj-bittorrent.math.binary :as bin]
-            [clj-bittorrent.math.numbers :as n]
-            [clj-bittorrent.metainfo.schema :as mschema]
-            [clj-bittorrent.net.net :as net]
-            [clj-bittorrent.peer.peer :as peer]
-            [clj-bittorrent.peer.schema :as pschema]
+            [clj-bittorrent.tracker.schema :as tschema]
             [clj-bittorrent.tracker.urlencode :as u]
-            [clj-bittorrent.tracker.schema :as tschema])
-  (:import (org.apache.http HttpRequest)))
-
+            [clj-bittorrent.net.net :as net]))
 
 (def response-kmap
   {"failure reason" :failure-reason
@@ -26,7 +20,7 @@
 (schema/defn decode-peer-binary-entry :- tschema/PeerResponse
   [s :- tschema/CompactPeer]
   (let [[ip port] (split-at 4 s)]
-    {:ip (bin/ipv4-address (seq (map bin/ubyte ip)))
+    {:ip   (bin/ipv4-address (seq (map bin/ubyte ip)))
      :port (BigInteger. (byte-array (seq port)))}))
 
 (schema/defn decode-peers-binary :- [tschema/PeerResponse]

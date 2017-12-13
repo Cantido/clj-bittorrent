@@ -1,7 +1,7 @@
 (ns clj-bittorrent.message.decode
-  (:require [clj-bittorrent.message.schema :refer :all]
-            [clj-bittorrent.math.binary :as bin]
-            [schema.core :as schema])
+  (:require [schema.core :as schema]
+            [clj-bittorrent.message.schema :refer :all]
+            [clj-bittorrent.math.binary :as bin])
   (:import (java.io Reader)))
 
 (defn- split-message
