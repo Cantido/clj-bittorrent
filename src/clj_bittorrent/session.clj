@@ -30,43 +30,21 @@
    :connections   #{}})
 
 (defn announcement [s]
-  (let [{:keys [metainfo
-                peer-id
-                port
-                uploaded
-                downloaded
-                left
-                ip]} s
-        info-hash (:info-hash metainfo)]
-      {:tracker-url (:announce metainfo)
-       :info-hash info-hash
-       :peer-id peer-id
-       :port port
-       :uploaded uploaded
-       :downloaded downloaded
-       :left left
-       :compact 1
-       :event "started"
-       :ip ip}))
+  (-> {}
+      (assoc :tracker-url (get-in s [:metainfo :announce]))
+      (assoc :info-hash (get-in s [:metainfo :info-hash]))
+      (merge (select-keys s #{:peer-id :port :uploaded :downloaded :left :ip}))
+      (assoc :event "started")
+      (assoc :compact 1)))
 
-(defn add-keyed [key m x]
-  (assoc m (get x key) x))
-
-(defn reduce-keyed [k m xs]
-  (reduce
-    (partial add-keyed k)
-    m
-    xs))
-
-(def reduce-peers
-  (partial reduce-keyed :peer-id))
-
-(defn announce-start [s]
-  (let [tracker-url [:metainfo :announce]
-        response
-        (tracker/announce
-          (get-in s tracker-url)
-          (announcement s))]))
+(defn peers-map
+  ([peers]
+   (peers-map {} peers))
+  ([init peers]
+   (reduce-kv
+     (fn [i k v] (assoc i k (first v)))
+     init
+     (group-by :peer-id peers))))
 
 (defn merge-tracker-response [s tracker-url response]
   (let
@@ -84,7 +62,7 @@
         (update-in [:leechers] #(assoc % tracker-url incomplete))
         (update-in [:interval] #(assoc % tracker-url interval))
         (update-in [:min-interval] #(assoc % tracker-url min-interval))
-        (update-in [:peers] #(reduce-peers % (:peers response))))))
+        (update-in [:peers] #(peers-map % peers)))))
 
 
 (defn start
