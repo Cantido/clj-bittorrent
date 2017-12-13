@@ -45,13 +45,7 @@
       :interested :choked-interested
       :not-interested :choked}})
 
-(def peer-fsm (fsm/fsm peer-states))
-
-(defn- next-state
-  [peer transition]
-  {:pre [(:state peer) transition]
-   :post [(:state %)]}
-  (update-in peer [:state] #(peer-fsm % transition)))
+(def ^:private next-state (fsm/entity-state-machine peer-states))
 
 (def PeerState
   "The position of the peer in the BitTorrent state machine"

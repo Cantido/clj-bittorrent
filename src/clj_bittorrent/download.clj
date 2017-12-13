@@ -16,13 +16,8 @@
       :announce-completed :completed
       :announce-stopped :stopped}})
 
-(def download-fsm (fsm/fsm download-states))
 
-(defn- next-state
-  [peer transition]
-  {:pre [(:state peer) transition]
-   :post [(:state %)]}
-  (update-in peer [:state] #(download-fsm % transition)))
+(def ^:private next-state (fsm/entity-state-machine download-states))
 
 (def download-start-state
   {:state         :start
