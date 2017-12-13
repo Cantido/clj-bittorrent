@@ -1,5 +1,5 @@
 (ns clj-bittorrent.message.state
-  (:require [clj-bittorrent.peer.connection :as c]
+  (:require [clj-bittorrent.peer.schema :as pschema]
             [schema.core :as schema]
             [clj-bittorrent.peer.peer :as peer]
             [clj-bittorrent.message.schema :refer :all]))
@@ -12,39 +12,39 @@
 
 (declare msg state)
 
-(schema/defmethod apply-msg :keep-alive :- c/Connection
-                  [msg :- KeepAliveMessage state :- c/Connection]
+(schema/defmethod apply-msg :keep-alive :- pschema/Connection
+                  [msg :- KeepAliveMessage state :- pschema/Connection]
                   state)
 
-(schema/defmethod apply-msg :choke :- c/Connection
-                  [msg :- ChokeMessage state :- c/Connection]
+(schema/defmethod apply-msg :choke :- pschema/Connection
+                  [msg :- ChokeMessage state :- pschema/Connection]
                   (update-in state [:client] peer/choke))
 
-(schema/defmethod apply-msg :unchoke :- c/Connection
-                  [msg :- UnchokeMessage state :- c/Connection]
+(schema/defmethod apply-msg :unchoke :- pschema/Connection
+                  [msg :- UnchokeMessage state :- pschema/Connection]
                   (update-in state [:client] peer/unchoke))
 
-(schema/defmethod apply-msg :interested :- c/Connection
-                  [msg :- InterestedMessage state :- c/Connection]
+(schema/defmethod apply-msg :interested :- pschema/Connection
+                  [msg :- InterestedMessage state :- pschema/Connection]
                   (update-in state [:peer] peer/interested))
 
-(schema/defmethod apply-msg :not-interested :- c/Connection
-                  [msg :- NotInterestedMessage state :- c/Connection]
+(schema/defmethod apply-msg :not-interested :- pschema/Connection
+                  [msg :- NotInterestedMessage state :- pschema/Connection]
                   (update-in state [:peer] peer/not-interested))
 
-(schema/defmethod apply-msg :have :- c/Connection
-                  [msg :- HaveMessage state :- c/Connection]
+(schema/defmethod apply-msg :have :- pschema/Connection
+                  [msg :- HaveMessage state :- pschema/Connection]
                   (update-in state [:peer] #(peer/has-piece % (:index msg))))
 
-(schema/defmethod apply-msg :bitfield :- c/Connection
-                  [msg :- BitfieldMessage state :- c/Connection]
+(schema/defmethod apply-msg :bitfield :- pschema/Connection
+                  [msg :- BitfieldMessage state :- pschema/Connection]
                   (update-in
                     state
                     [:peer]
                     #(apply peer/has-piece % (:indices msg))))
 
-(schema/defmethod apply-msg :request :- c/Connection
-                  [msg :- RequestMessage state :- c/Connection]
+(schema/defmethod apply-msg :request :- pschema/Connection
+                  [msg :- RequestMessage state :- pschema/Connection]
                   (update-in
                     state
                     [:peer]
@@ -52,8 +52,8 @@
                        %
                        (select-keys msg [:index :offset :length]))))
 
-(schema/defmethod apply-msg :piece :- c/Connection
-                  [msg :- PieceMessage state :- c/Connection]
+(schema/defmethod apply-msg :piece :- pschema/Connection
+                  [msg :- PieceMessage state :- pschema/Connection]
                   (update-in
                     state
                     [:client]
@@ -61,13 +61,13 @@
                        %
                        (select-keys msg [:index :offset :contents]))))
 
-(schema/defmethod apply-msg :cancel :- c/Connection
-                  [msg :- CancelMessage state :- c/Connection]
+(schema/defmethod apply-msg :cancel :- pschema/Connection
+                  [msg :- CancelMessage state :- pschema/Connection]
                   (update-in
                     state
                     [:peer :requested]
                     #(disj % (select-keys msg [:index :offset :length]))))
 
-(schema/defmethod apply-msg :port :- c/Connection
-                  [msg :- PortMessage state :- c/Connection]
+(schema/defmethod apply-msg :port :- pschema/Connection
+                  [msg :- PortMessage state :- pschema/Connection]
                   (assoc-in state [:peer :port] (:port msg)))

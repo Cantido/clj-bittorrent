@@ -2,11 +2,6 @@
   "Manipulate client-peer connection maps."
   (:require [clj-bittorrent.peer.peer :as peer]))
 
-(def Connection
-  "A connection between the local peer (AKA \"client\") and a remote peer."
-  {:client peer/Peer
-   :peer peer/Peer})
-
 (def connection-default-state
   {:client peer/peer-default-state
    :peer   peer/peer-default-state})

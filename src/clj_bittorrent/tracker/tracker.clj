@@ -9,6 +9,7 @@
             [clj-bittorrent.metainfo.schema :as mschema]
             [clj-bittorrent.net.net :as net]
             [clj-bittorrent.peer.peer :as peer]
+            [clj-bittorrent.peer.schema :as pschema]
             [clj-bittorrent.tracker.urlencode :as u])
   (:import (org.apache.http HttpRequest)))
 
@@ -43,7 +44,7 @@
   "A request sent by a peer to get peers from a tracker, and to inform the
    tracker of its download status."
   {:info-hash mschema/InfoHash
-   :peer-id peer/PeerId
+   :peer-id pschema/PeerId
    :port     net/Port
    :uploaded n/Count
    :downloaded n/Count
@@ -57,7 +58,7 @@
   "One peer that can be contacted to download a file."
    {:ip       net/IpAddress
     :port     net/Port
-    (schema/optional-key :peer-id) peer/PeerId})
+    (schema/optional-key :peer-id) pschema/PeerId})
 
 (def CompactPeer
   "A peer response when Compact is set to 1"

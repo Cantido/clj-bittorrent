@@ -7,6 +7,7 @@
             [clj-bittorrent.metainfo.metainfo :as m]
             [clj-bittorrent.metainfo.schema :as mschema]
             [clj-bittorrent.peer.peer :as peer]
+            [clj-bittorrent.peer.schema :as pschema]
             [clj-bittorrent.tracker.tracker :as tracker])
   (:import (java.io File)
            (java.security MessageDigest)))
@@ -16,7 +17,7 @@
 (schema/def info-hash :- mschema/InfoHash
   [18 52 86 120 -102 -68 -34 -15 35 69 103 -119 -85 -51 -17 18 52 86 120 -102])
 
-(schema/def peer-id :- peer/PeerId
+(schema/def peer-id :- pschema/PeerId
   [18 52 86 120 -102 -68 -34 -15 35 69 103 -119 -85 -51 -17 18 52 86 120 -102])
 
 (def expected-urlencoded-info-hash
