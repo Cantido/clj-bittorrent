@@ -6,7 +6,7 @@
             [clj-bencode.core :as b]
             [clj-bittorrent.math.binary :as bin]
             [clj-bittorrent.math.numbers :as n]
-            [clj-bittorrent.metainfo.metainfo :as metainfo]
+            [clj-bittorrent.metainfo.schema :as mschema]
             [clj-bittorrent.net.net :as net]
             [clj-bittorrent.peer.peer :as peer]
             [clj-bittorrent.tracker.urlencode :as u])
@@ -42,7 +42,7 @@
 (def TrackerRequest
   "A request sent by a peer to get peers from a tracker, and to inform the
    tracker of its download status."
-  {:info-hash metainfo/InfoHash
+  {:info-hash mschema/InfoHash
    :peer-id peer/PeerId
    :port     net/Port
    :uploaded n/Count
