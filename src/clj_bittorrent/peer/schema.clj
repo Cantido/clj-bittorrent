@@ -2,6 +2,7 @@
   (:require [clj-bittorrent.net.net :as net]
             [schema.core :as schema]
             [clj-bittorrent.pieces.blocks :as blocks]
+            [clj-bittorrent.pieces.schema :as pcschema]
             [clj-bittorrent.math.numbers :as n]
             [clj-bittorrent.math.hash :as hash]))
 
@@ -33,11 +34,11 @@
 
 (def HasBlocks
   "The blocks (partial pieces) that a peer already has."
-  #{blocks/BlockData})
+  #{pcschema/BlockData})
 
 (def RequestedBlocks
   "The IDs of blocks that a peer has requested."
-  #{blocks/BlockId})
+  #{pcschema/BlockId})
 
 (def Peer
   "A peer is trying to download or upload pieces of a file."

@@ -5,6 +5,7 @@
             [clj-bittorrent.state :as fsm]
             [clj-bittorrent.math.numbers :as n]
             [clj-bittorrent.peer.schema :as pschema]
+            [clj-bittorrent.pieces.schema :as pcschema]
             [clj-bittorrent.pieces.blocks :as blocks]
             [clj-bittorrent.pieces.pieces :as pieces])
   (:import (java.nio.charset StandardCharsets)))
@@ -102,7 +103,7 @@
   "Add a request for a block to a peer. If the peer has that block in
   their \"have\" set, then that block is also removed from that set."
   [peer :- pschema/Peer
-   block :- blocks/BlockId]
+   block :- pcschema/BlockId]
   {:post [(not (contains? (:have %) (:index block)))
           (contains? (:requested %) block)]}
   (-> peer
@@ -113,7 +114,7 @@
   "Add a block of data to a peer. If the peer requested the given
    block, that block will be removed from the requested set as well."
   [peer :- pschema/Peer
-   block :- blocks/BlockData]
+   block :- pcschema/BlockData]
   (-> peer
       (update
         :blocks
