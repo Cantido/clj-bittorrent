@@ -8,7 +8,7 @@
 
 
 (defn client-with [ks v]
-  (assoc-in conn/connection-default-state ks v))
+  (assoc-in conn/new-connection ks v))
 
 (def choked-client
   (client-with [:client :state] :choked))
@@ -45,10 +45,10 @@
 
 
 (deftest apply-msg-test
-  (is (= conn/connection-default-state
+  (is (= conn/new-connection
          (msg/apply-msg
            {:id :keep-alive}
-           conn/connection-default-state)))
+           conn/new-connection)))
 
   (is (= choked-client
          (msg/apply-msg
@@ -95,7 +95,7 @@
            (msg/apply-msg
              {:id :have
               :index 6969}
-             conn/connection-default-state))))
+             conn/new-connection))))
 
   (is (= (:have peer-with-piece)
          (:have
@@ -116,7 +116,7 @@
            (msg/apply-msg
              {:id :bitfield
               :indices #{6969 420 666}}
-             conn/connection-default-state))))
+             conn/new-connection))))
 
   (is (= (:have peer-with-pieces)
          (:have
@@ -146,9 +146,9 @@
                      :index 6969
                      :offset 420
                      :contents [0x23]}
-                    conn/connection-default-state))))
+                    conn/new-connection))))
 
-  (is (= (:peer conn/connection-default-state)
+  (is (= (:peer conn/new-connection)
          (:peer (msg/apply-msg
                   {:id :cancel
                    :index 6969
@@ -159,4 +159,4 @@
   (is (= (:peer peer-with-port)
          (:peer (msg/apply-msg
                   {:id :port :port 6881}
-                  conn/connection-default-state)))))
+                  conn/new-connection)))))

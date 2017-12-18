@@ -1,5 +1,6 @@
 (ns clj-bittorrent.math.numbers
-  (:require [schema.core :as schema]))
+  (:require [schema.core :as schema])
+  (:import (org.joda.time ReadableInstant)))
 
 (defn nonneg? [x]
   (not (neg? x)))
@@ -26,3 +27,7 @@
 (def Count
   "A non-negative number that can represent a count of things."
   NonNegativeInt)
+
+(def Timestamp
+  "An instant in time."
+  ReadableInstant)

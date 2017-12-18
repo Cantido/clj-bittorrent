@@ -11,5 +11,6 @@
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}}
   :dependencies [[clj-bencode "4.0.1"]
                  [clj-http "3.7.0"]
+                 [clj-time "0.14.2"]
                  [org.clojars.cantido/clj-mmap "2.1.0"]
                  [prismatic/schema "1.1.7"]])

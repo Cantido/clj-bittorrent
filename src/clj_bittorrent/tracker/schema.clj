@@ -63,7 +63,8 @@
 
 (def TrackerFailedResponse
   "The response when a request to join a swarm has failed."
-  {:failure-reason FailureReason})
+  {:failure-reason FailureReason
+   :timestamp      n/Timestamp})
 
 (def TrackerSuccessResponse
   "The response when a request to join a swarm has is successful."
@@ -71,7 +72,8 @@
    (schema/optional-key :min-interval) Interval
    :complete                           CompleteCount
    :incomplete                         IncompleteCount
-   :peers                              [PeerResponse]})
+   :peers                              [PeerResponse]
+   :timestamp                          n/Timestamp})
 
 (def TrackerResponse
   "The overall state of a BitTorrent network's download, including

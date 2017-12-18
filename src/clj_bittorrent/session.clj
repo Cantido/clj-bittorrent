@@ -20,11 +20,9 @@
    :uploaded      0
    :downloaded    0
    :left          0
-   :seeders       {} ; keyed by tracker
-   :leechers      {} ; keyed by tracker
-   :intervals     {} ; keyed by tracker
-   :min-intervals {} ; keyed by tracker
-   :peers         {} ; keyed by peer id
+   :local-peer    {}
+   :announcements #{} ; relation of tracker-responses
+   :peers         #{} ; relation of peer maps
    :ip            (net/ip-address)
    :metainfo      {}
    :connections   #{}})
@@ -46,32 +44,18 @@
      init
      (group-by :peer-id peers))))
 
-(defn merge-tracker-response [s tracker-url response]
-  (let
-    [{:keys [peers
-             complete
-             incomplete
-             interval
-             min-interval]
-      :or {complete 0
-           incomplete 0
-           min-interval 0}}
-     response]
-    (-> s
-        (update-in [:seeders] #(assoc % tracker-url complete))
-        (update-in [:leechers] #(assoc % tracker-url incomplete))
-        (update-in [:interval] #(assoc % tracker-url interval))
-        (update-in [:min-interval] #(assoc % tracker-url min-interval))
-        (update-in [:peers] #(peers-map % peers)))))
+(defn merge-tracker-response
+  [s tracker-url response]
+  (-> s
+      (update-in [:announcements] #(conj % response))
+      (update-in [:peers] #(peers-map % (:peers response)))))
 
+(defn announce [s]
+  (tracker/announce
+    (get-in s [:metainfo :announce])
+    (announcement s)))
 
 (defn start
   "Start the download."
-  [s http-client]
-  (let [tracker-url (get-in s [:metainfo :announce])]
-    (->
-      (->> s
-        announcement
-        (tracker/announce http-client tracker-url)
-        (merge-tracker-response s tracker-url))
-      (next-state :start))))
+  [s]
+  (next-state s :start))

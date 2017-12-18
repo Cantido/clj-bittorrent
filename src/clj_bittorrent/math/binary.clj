@@ -147,3 +147,10 @@
   {:pre [(< x (Math/pow 2 (* n 8)))]
    :post [(<= n (count %))]}
   (pad-bytes n (int-bytearray x)))
+
+(defn sbytes-to-char-array
+  [bs]
+  (char-array
+    (map
+      (comp ubyte)
+      bs)))

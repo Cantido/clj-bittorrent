@@ -2,11 +2,13 @@
   "Interact with tracker servers."
   (:require [clojure.set :as s]
             [clj-bencode.core :as b]
+            [clj-http.client :as client]
             [schema.core :as schema]
             [clj-bittorrent.math.binary :as bin]
             [clj-bittorrent.tracker.schema :as tschema]
             [clj-bittorrent.tracker.urlencode :as u]
-            [clj-bittorrent.net.net :as net]))
+            [clj-bittorrent.net.net :as net]
+            [clj-time.core :as time]))
 
 (def response-kmap
   {"failure reason" :failure-reason
@@ -41,7 +43,8 @@
     (byte-array)
     (b/decode)
     (s/rename-keys response-kmap)
-    (update :peers decode-peers-binary)))
+    (update :peers decode-peers-binary)
+    (assoc :timestamp (time/now))))
 
 (schema/defn tracker-request :- tschema/HttpRequestMap
   "Create an HTTP request map from the info in map m."
@@ -65,12 +68,11 @@
 
 (schema/defn announce :- tschema/TrackerResponse
   "Announce yourself to the tracker for torrent map m."
-  [http-client
-   url :- net/Url
+  [url :- net/Url
    m :- tschema/TrackerRequest]
   {:pre [(some? m)
          (= 20 (count (:info-hash m)))]}
   (->> m
     (tracker-request url)
-    (http-client)
+    (client/request)
     (tracker-response)))

@@ -4,7 +4,8 @@
             [clj-bittorrent.math.numbers :as n]
             [clj-bittorrent.net.net :as net]
             [clj-bittorrent.pieces.blocks :as blocks]
-            [clj-bittorrent.pieces.schema :as pcschema]))
+            [clj-bittorrent.pieces.schema :as pcschema])
+  (:import (java.net Socket)))
 
 (def PeerState
   "The position of the peer in the BitTorrent state machine"
@@ -51,5 +52,7 @@
 
 (def Connection
   "A connection between the local peer (AKA \"client\") and a remote peer."
-  {:client Peer
-   :peer Peer})
+  {:state  (schema/enum :waiting-for-handshake :ready)
+   (schema/optional-key :socket) Socket
+   :client Peer
+   :peer   Peer})

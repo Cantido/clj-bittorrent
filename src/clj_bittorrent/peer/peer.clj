@@ -3,22 +3,16 @@
   (:require [clojure.set :as s]
             [schema.core :as schema]
             [clj-bittorrent.math.numbers :as n]
-            [clj-bittorrent.peer.schema :as pschema]
             [clj-bittorrent.pieces.blocks :as blocks]
             [clj-bittorrent.pieces.pieces :as pieces]
             [clj-bittorrent.pieces.schema :as pcschema]
-            [clj-bittorrent.state :as fsm])
+            [clj-bittorrent.state :as fsm]
+            [clj-bittorrent.peer.schema :as pschema])
   (:import (java.nio.charset StandardCharsets)))
 
 (def peer-states
   {:start
-     {:open-port :port-opened}
-
-   :port-opened
-     {:announce-port :waiting-for-handshake}
-
-   :waiting-for-handshake
-     {:receive-handshake :choked}
+     {:handshake :choked}
 
    :ready
      {:choke :choked
@@ -52,6 +46,9 @@
    :have #{}
    :blocks #{}
    :requested #{}})
+
+(defn handshake [peer]
+  (next-state peer :handshake))
 
 (schema/defn choke :- pschema/Peer
   "Choke the peer. The peer that is choked will be ignored

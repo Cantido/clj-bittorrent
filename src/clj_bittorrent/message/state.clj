@@ -7,8 +7,13 @@
 (defn apply-type [x & more] (:id x))
 
 (defmulti apply-msg
-          "Act upon a message sent by a remote peer."
+          "Act upon a message sent by a remote peer and update a connection."
           apply-type)
+
+(defn update-connection
+  "apply-msg with flipped-around arguments."
+  [c m]
+  (apply-msg m c))
 
 (declare msg state)
 

@@ -35,6 +35,6 @@
                  expected-reserved
                  info-hash
                  peer-id)
-         (handshake/handshake
+         (handshake/encode
            {:info-hash info-hash
             :peer-id peer-id}))))
